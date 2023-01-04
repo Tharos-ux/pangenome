@@ -1,5 +1,5 @@
 #!/bin/bash
-#SBATCH --job-name=minigraph_seq_to_graph
+#SBATCH --job-name=minimap_seq_to_paf
 #SBATCH --cpus-per-task=8
 #SBATCH --mem=80G
 #SBATCH --output=LOG_minigraph.log

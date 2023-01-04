@@ -1,5 +1,5 @@
 #!/bin/bash
-#SBATCH --job-name=minigraph_create_graph
+#SBATCH --job-name=minigraph_create_graph_phased
 #SBATCH --cpus-per-task=8
 #SBATCH --mem=80G
 #SBATCH --output=LOG_minigraph.log
