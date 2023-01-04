@@ -9,6 +9,6 @@ if __name__ == "__main__":
         "file", type=str, help="fasta-like file")
     args = parser.parse_args()
 
-    with open(f"out_{args.file}.txt", "w", encoding="utf-8") as writer:
+    with open(f"{args.file}_out.txt", "w", encoding="utf-8") as writer:
         writer.write(
             '\n'.join([l for l in open(args.file, "r", encoding="utf-8") if l[0] == '>']))
