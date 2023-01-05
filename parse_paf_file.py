@@ -1,6 +1,7 @@
 "Mapping from paf file"
 from argparse import ArgumentParser
 from json import dump
+from collections import Counter
 
 
 if __name__ == "__main__":
@@ -23,6 +24,12 @@ if __name__ == "__main__":
         key=lambda x: x['residue_match_number']
     )[::-1]
 
-    print([x for x in mapping if x['query_seq_name'] != x['ref_seq_name']])
+    print("\nMATCHES")
+    print('\n'.join([f"Chromosome {k} : {v} hits" for k, v in Counter(
+        [x['query_seq_name'] for x in mapping if x['query_seq_name'] == x['ref_seq_name']]).items()]))
+
+    print("\nMISSMATCHES")
+    print('\n'.join(
+        [f"{x['query_seq_name']} against {x['ref_seq_name']}" for x in mapping if x['query_seq_name'] != x['ref_seq_name']]))
 
     dump(mapping, open(f"{args.file}_out.json", "w", encoding="utf-8"))
