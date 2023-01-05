@@ -1,5 +1,6 @@
-"Isolates tags from fasta file"
+"Isolates from tags from fasta file"
 from argparse import ArgumentParser
+from Bio import SeqIO
 
 
 if __name__ == "__main__":
@@ -9,6 +10,11 @@ if __name__ == "__main__":
         "file", type=str, help="fasta-like file")
     args = parser.parse_args()
 
-    with open(f"{args.file}_out.txt", "w", encoding="utf-8") as writer:
-        writer.write(
-            '\n'.join([l for l in open(args.file, "r", encoding="utf-8") if l[0] == '>']))
+    # id du chromosome que l'on veut isoler
+    chromosome: str = "3"
+
+    # contient les codes de retour ; seul 1 est valide
+    x: list[int] = [SeqIO.write(fasta, f"{args.file}_chr{chromosome}.fasta", 'fasta') for fasta in SeqIO.parse(
+        open(args.file, encoding="utf-8"), 'fasta') if fasta.id == chromosome]
+
+    print(f"For chromosome {chromosome}, {len(x)} sequences were isolated.")
