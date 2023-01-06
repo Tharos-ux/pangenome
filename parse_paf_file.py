@@ -28,8 +28,14 @@ if __name__ == "__main__":
     print('\n'.join([f"Chromosome {k} : {v} hits" for k, v in Counter(
         [x['query_seq_name'] for x in mapping if x['query_seq_name'] == x['ref_seq_name']]).items()]))
 
-    print("\nMISSMATCHES")
+    print("\nMATCHES")
+    target: str = '3'
     print('\n'.join(
-        [f"{x['query_seq_name']} against {x['ref_seq_name']}" for x in mapping if x['query_seq_name'] != x['ref_seq_name']]))
+        [f"{x['query_seq_name']} against {x['ref_seq_name']}" for x in mapping if x['ref_seq_name'] == target]))
+
+    querries_to_keep: list = [x['query_seq_name']
+                              for x in mapping if x['ref_seq_name'] == target]
+
+    # print('\n'.join([f"{x['query_seq_name']} against {x['ref_seq_name']}" for x in mapping if x['query_seq_name'] != x['ref_seq_name']]))
 
     dump(mapping, open(f"{args.file}_out.json", "w", encoding="utf-8"))
