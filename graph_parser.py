@@ -4,8 +4,9 @@ from pyvis.network import Network
 from networkx import Graph
 from mycolorpy import colorlist
 from PIL import Image
-import matplotlib as mpl
-import matplotlib.pyplot as plt
+from matplotlib import cm
+from matplotlib.colors import Normalize
+from matplotlib.pyplot import subplots, savefig, plot, legend, figure
 
 if __name__ == "__main__":
 
@@ -25,13 +26,13 @@ if __name__ == "__main__":
         cmap="viridis", data_arr=alignment_length)
 
     # Creating the colorbar for legend
-    fig, ax = plt.subplots(1, 1)
-    norm = mpl.colors.Normalize(vmin=0, vmax=maximum_alignment)
+    fig, ax = subplots(1, 1)
+    norm = Normalize(vmin=0, vmax=maximum_alignment)
     cbar = ax.figure.colorbar(
-        mpl.cm.ScalarMappable(norm=norm, cmap="viridis"),
+        cm.ScalarMappable(norm=norm, cmap="viridis"),
         ax=ax, pad=.05, extend='both', fraction=1)
     ax.axis('off')
-    plt.savefig(f"{args.file.split('.')[0]}_cbar.png", bbox_inches='tight')
+    savefig(f"{args.file.split('.')[0]}_cbar.png", bbox_inches='tight')
 
     Image.open(f"{args.file.split('.')[0]}_cbar.png").rotate(
         90, Image.NEAREST, expand=True).save(f"{args.file.split('.')[0]}_cbar.png")
@@ -46,14 +47,14 @@ if __name__ == "__main__":
     my_cmap: dict = {source: colors_sources[i]
                      for i, source in enumerate(alignment_sources)}
 
-    plt.figure().clear()
+    figure().clear()
     # Creating the legends for alignments
-    handles = [plt.plot([], [], marker="s", color=cs, ls="none")[0]
+    handles = [plot([], [], marker="s", color=cs, ls="none")[0]
                for cs in colors_sources]
-    legend = plt.legend(handles, alignment_sources, loc=3,
-                        framealpha=1, frameon=False)
-    fig = legend.figure
-    bbox = legend.get_window_extent().transformed(fig.dpi_scale_trans.inverted())
+    l = legend(handles, alignment_sources, loc=3,
+               framealpha=1, frameon=False)
+    fig = l.figure  # type: ignore
+    bbox = l.get_window_extent().transformed(fig.dpi_scale_trans.inverted())
     fig.savefig(
         f"{args.file.split('.')[0]}_legend.png", dpi="figure", bbox_inches=bbox)
 
