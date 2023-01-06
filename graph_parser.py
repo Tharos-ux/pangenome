@@ -90,7 +90,7 @@ if __name__ == "__main__":
     try:
         graph_visualizer.show(f"{args.file.split('.')[0]}_graph.html")
     except FileNotFoundError:
-        # Path indicated for file may not be correct regarding the lib but writes .html anyways, so ignore
+        # Path indicated for file may not be correct regarding the lib but writes .html anyways, so ignore ^^
         pass
 
     with open(f"{args.file.split('.')[0]}_graph.html", "r", encoding="utf-8") as html_reader:
