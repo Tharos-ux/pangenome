@@ -2,6 +2,7 @@
 . /local/env/envconda.sh
 
 WD=$(pwd)
+export CONDA_ALWAYS_YES="true"
 
 # init env
 conda create -p $WD"/.env" python=3.11
@@ -17,4 +18,5 @@ conda install -c bioconda vg
 # installing packages
 python -m pip install -r requirements.txt
 
+unset CONDA_ALWAYS_YES
 conda deactivate

@@ -4,6 +4,19 @@
 #SBATCH --mem=80G
 #SBATCH --output=LOG_minigraph.log
 
-minigraph="/scratch/sdubois/Stage_M2/minigraph/minigraph"
+. /local/env/envconda.sh
 
-$minigraph -cx $1 $2 > $3
+ENV=".env/"
+
+if [ -d "$ENV" ];
+then
+    echo "$ENV conda environment already exists"
+else
+	bash env.sh
+fi
+
+conda activate .env/
+
+minigraph -cx $1 $2 > $3
+
+conda deactivate

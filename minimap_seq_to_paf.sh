@@ -4,6 +4,19 @@
 #SBATCH --mem=80G
 #SBATCH --output=LOG_minimap.log
 
-minimap="/scratch/sdubois/Stage_M2/minimap2/minimap2"
+. /local/env/envconda.sh
 
-$minimap -x asm5 $1 $2 > $3
+ENV=".env/"
+
+if [ -d "$ENV" ];
+then
+    echo "$ENV conda environment already exists"
+else
+	bash env.sh
+fi
+
+conda activate .env/
+
+minimap2 -x asm5 $1 $2 > $3
+
+conda deactivate

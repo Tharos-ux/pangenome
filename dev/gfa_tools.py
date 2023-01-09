@@ -11,7 +11,7 @@ class GfaGraph:
                 if line.split()[0] == 'S':
                     setattr(self, line.split()[1], line.split()[3:]+[i])
 
-    def request_sequence(self, target: str) -> str:
+    def request_sequence(self, target: str) -> None | str:
         target_line: int = getattr(self, target)[-1]
         with open(self.__file, "r", encoding="utf-8") as gfa_reader:
             for i, line in enumerate(gfa_reader):
