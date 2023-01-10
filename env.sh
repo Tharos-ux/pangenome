@@ -5,7 +5,7 @@ WD=$(pwd)
 export CONDA_ALWAYS_YES="true"
 
 # init env
-conda create -p $WD"/.env" python=3.11
+conda create -p $WD"/.env" python=3.10
 
 # activate env to install packages
 conda activate $WD"/.env"
