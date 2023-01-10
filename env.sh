@@ -14,6 +14,7 @@ conda activate $WD"/.env"
 conda install -c bioconda minimap2
 conda install -c bioconda minigraph
 conda install -c bioconda vg
+conda install -c bioconda odgi
 
 # installing packages
 python -m pip install -r requirements.txt

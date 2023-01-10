@@ -19,12 +19,12 @@ def export_mapping(paf_file: str, save: bool = False) -> list:
             {
                 'query_seq_name': l.split()[0],
                 'ref_seq_name':l.split()[5],
-                'residue_match_number':int(l.split()[10])
+                'sequence_length':int(l.split()[10])
             }
             for l in open(paf_file, "r", encoding="utf-8")
             if int(l.split()[10]) >= 4000000
         ],
-        key=lambda x: x['residue_match_number']
+        key=lambda x: x['sequence_length']
     )[::-1]
 
     if save:
@@ -41,24 +41,18 @@ def isolate_scaffolds(fasta_file: str, paf_file: str, chromosom: str) -> None:
         paf_file (str): mapping of reference against query
         chromosom (str): chromosom identifier, name used on reference file
     """
-    mapping: list[dict] = sorted(
+    retcodes: list[int] = [
+        SeqIO.write(
+            fasta, f"{fasta_file}_chr{chromosom}.fasta", 'fasta'
+        )
+        for fasta in SeqIO.parse(
+            open(fasta_file, encoding="utf-8"), 'fasta'
+        )
+        if fasta.id in
         [
-            {
-                'query_seq_name': l.split()[0],
-                'ref_seq_name':l.split()[5],
-                'residue_match_number':int(l.split()[10])
-            }
-            for l in open(paf_file, "r", encoding="utf-8")
-            if int(l.split()[10]) >= 4000000
-        ],
-        key=lambda x: x['residue_match_number']
-    )[::-1]
-
-    querries_to_keep: list = [x['query_seq_name']
-                              for x in mapping if x['ref_seq_name'] == chromosom]
-
-    retcodes: list[int] = [SeqIO.write(fasta, f"{fasta_file}_chr{chromosom}.fasta", 'fasta') for fasta in SeqIO.parse(
-        open(fasta_file, encoding="utf-8"), 'fasta') if fasta.id in querries_to_keep]
+            x['query_seq_name']for x in export_mapping(paf_file=paf_file, save=False) if x['ref_seq_name'] == chromosom
+        ]
+    ]
 
     if not all(retcodes):
         print(f"For chromosom {chromosom}, parsing failed.")
