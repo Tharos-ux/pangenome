@@ -1,0 +1,6 @@
+# Consensus sample
+SeqBt1  ./data/seqoccin.Bt.v1.0.fasta_chr3.fasta
+
+# Haplotypes samples
+BtChar.1    ./data/Char_1_chr_3.fasta
+BtChar.2    ./data/Char_2_chr_3.fasta
