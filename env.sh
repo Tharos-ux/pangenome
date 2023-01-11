@@ -15,6 +15,7 @@ conda install -c bioconda minimap2
 conda install -c bioconda minigraph
 conda install -c bioconda vg
 conda install -c bioconda odgi
+conda install -c bioconda htslib
 
 # install deps minigraph-cactus
 conda install -c conda-forge m2-libbz2
