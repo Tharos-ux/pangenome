@@ -23,7 +23,7 @@ python -m pip install -r requirements.txt
 git clone https://github.com/ComparativeGenomicsToolkit/cactus.git --recursive
 cd cactus
 grep apt-get Dockerfile | head -1 | sed -e 's/RUN //g' -e 's/apt-get/sudo apt-get/g'
-make -j 8
+make -j 8 --disable-bz2
 build-tools/downloadPangenomeTools
 cd ..
 
