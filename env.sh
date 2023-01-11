@@ -16,6 +16,10 @@ conda install -c bioconda minigraph
 conda install -c bioconda vg
 conda install -c bioconda odgi
 
+# install deps minigraph-cactus
+conda install -c conda-forge m2-libbz2
+conda install -c anaconda bzip2
+
 # installing required python packages
 python -m pip install -r requirements.txt
 
@@ -27,7 +31,7 @@ python -m pip install -U -r ./toil-requirement.txt
 python -m pip install -U .
 grep apt-get Dockerfile | head -1 | sed -e 's/RUN //g' -e 's/apt-get/sudo apt-get/g'
 make -j 8
-build-tools/downloadPangenomeTools --disable-bz2
+build-tools/downloadPangenomeTools
 cd ..
 
 unset CONDA_ALWAYS_YES
