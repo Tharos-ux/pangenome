@@ -15,11 +15,10 @@ conda install -c bioconda minimap2
 conda install -c bioconda minigraph
 conda install -c bioconda vg
 conda install -c bioconda odgi
-conda install -c bioconda htslib
 
-# install deps minigraph-cactus
-conda install -c conda-forge m2-libbz2
+# install deps minigraph-cactus : bzip2
 conda install -c anaconda bzip2
+./configure CPPFLAGS=-I./.env/bin/bzip2/lib LDFLAGS="-L./.env/bin/bzip2/lib -Wl,-R./.env/bin/bzip2/lib"
 
 # installing required python packages
 python -m pip install -r requirements.txt

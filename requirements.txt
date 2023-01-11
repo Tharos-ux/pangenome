@@ -1,3 +1,1 @@
 Bio
-bzip2-devel
-libbz2-dev
