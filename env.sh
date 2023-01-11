@@ -25,7 +25,7 @@ cd cactus
 python -m pip install -U setuptools pip
 python -m pip install -U -r ./toil-requirement.txt
 python -m pip install -U .
-grep apt-get Dockerfile | head -1 | sed -e 's/RUN //g' -e 's/apt-get/sudo apt-get/g'
+grep apt-get Dockerfile | head -1 | sed -e 's/RUN //g' -e 's/apt-get/sudo apt-get/g' --disable-bz2
 make -j 8
 build-tools/downloadPangenomeTools
 cd ..
