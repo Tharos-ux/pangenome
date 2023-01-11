@@ -32,7 +32,6 @@ python -m pip install -U .
 grep apt-get Dockerfile | head -1 | sed -e 's/RUN //g' -e 's/apt-get/sudo apt-get/g'
 make -j 8
 build-tools/downloadPangenomeTools
-cd ..
 
 unset CONDA_ALWAYS_YES
 conda deactivate

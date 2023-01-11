@@ -16,7 +16,7 @@ else
 	bash env.sh
 fi
 
-cactus-minigraph ./jobstore $1 $2 --reference --mapCores 8
+docker run -v $(pwd):/data_docker --rm -it quay.io/comparative-genomics-toolkit/cactus:v2.0.5 cactus-minigraph ./jobstore $1 $2 --reference --mapCores 8 --root mr --binariesMode local
 
 # $1 must be a txt file from the format 
 # Diploid sample:
