@@ -4,6 +4,17 @@
 #SBATCH --mem=80G
 #SBATCH --output=LOG_cactus.log
 
+. /local/env/envconda.sh
+
+ENV=".env/"
+
+if [ -d "$ENV" ];
+then
+    echo "$ENV conda environment already exists"
+else
+	bash env.sh
+fi
+
 cactus-minigraph ./jobstore $1 $2 --reference --mapCores 8
 
 # $1 must be a txt file from the format 
