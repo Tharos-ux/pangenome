@@ -11,6 +11,7 @@ ENV=".env/"
 if [ -d "$ENV" ];
 then
     echo "$ENV conda environment already exists"
+    . /local/env/envhtslib-1.6.sh
 else
 	bash env.sh
 fi

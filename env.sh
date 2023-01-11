@@ -1,6 +1,7 @@
 #!/bin/sh
 . /local/env/envconda.sh
 
+
 WD=$(pwd)
 export CONDA_ALWAYS_YES="true"
 
@@ -16,9 +17,8 @@ conda install -c bioconda minigraph
 conda install -c bioconda vg
 conda install -c bioconda odgi
 
-# install deps minigraph-cactus : bzip2
-conda install -c anaconda bzip2
-./configure CPPFLAGS=-I./.env/bin/bzip2/lib LDFLAGS="-L./.env/bin/bzip2/lib -Wl,-R./.env/bin/bzip2/lib"
+# get deps minigraph-cactus : bzip2
+. /local/env/envhtslib-1.6.sh
 
 # installing required python packages
 python -m pip install -r requirements.txt
