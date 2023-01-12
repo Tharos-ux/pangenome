@@ -6,7 +6,7 @@
 
 source /scratch/sdubois/Stage_M2/cactus-bin-v2.4.0/cactus_env/bin/activate
 
-cactus-minigraph ./jobstore $1 $2 --reference --mapCores 8
+cactus-minigraph ./jobstore $1 $2 --reference $3
 
 # $1 must be a txt file from the format 
 # Diploid sample:
