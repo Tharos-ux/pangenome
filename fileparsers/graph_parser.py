@@ -77,14 +77,8 @@ def render_graph(gfa_file: str, debug: bool = False) -> None:
                                    line.split()[3], color=my_cmap[int(line.split()[6][5:])], weight=0.5)
                 j += 1
 
-    # if I want to draw a .png not interactive figure
-    # plt.figure().clear()
-    # nx.draw(graph, node_size=3, with_labels=False, node_color='red')
-    # plt.savefig(f"{gfa_file.split('.')[0]}_graph.html")
-
     graph_visualizer = Network(
-        height='900px', width='100%')  # heading=f"Graph for {gfa_file.split('.')[0].split('/')[-1]}"
-    # graph_visualizer.show_buttons()
+        height='900px', width='100%')
     graph_visualizer.toggle_physics(not debug)
     graph_visualizer.from_nx(graph)
     try:
