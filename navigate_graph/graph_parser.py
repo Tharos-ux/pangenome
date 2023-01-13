@@ -1,5 +1,5 @@
 "GFA file vizualizer"
-from argparse import ArgumentParser, SUPPRESS
+from argparse import ArgumentParser
 from pyvis.network import Network
 from networkx import Graph
 from mycolorpy import colorlist
@@ -7,21 +7,27 @@ from PIL import Image
 from matplotlib import cm
 from matplotlib.colors import Normalize
 from matplotlib.pyplot import subplots, savefig, plot, legend, figure
+from gfapy import Gfa
 
 
-def render_graph(gfa_file: str, debug: bool = False) -> None:
+def render_graph(gfa_file: str, input_style: str = 'rGFA', debug: bool = False) -> None:
     """Creates a interactive .html file representing the given graph
 
     Args:
-        gfa_file (str): path to a rGFA file
+        gfa_file (str): path to a rGFA/GFA1,2 file
+        input_style (str): sub-GFA format. Supports rGFA, GFA1, GFA2
         debug (bool, optional): plots less nodes in graph. Defaults to False.
     """
-    # S are nodes and L are edges
-    alignment_length: list = [len(l.split()[2]) for l in open(
-        gfa_file, "r", encoding="utf-8") if l.split()[0] == "S"]
+    gfa_graph: Gfa = Gfa.from_file(gfa_file)
+
+    # position of sequence differs between GFA2 and others (GFA1,rGFA)
+    alignment_length: list = [len(node.split[2]) if input_style != 'GFA2' else len(
+        node.split[3]) for node in gfa_graph.segments]
+    # getting max sequence length
     maximum_alignment: int = max(alignment_length)
+    # rescaling
     alignment_length: list = [l/maximum_alignment for l in alignment_length]
-    # Creating a colormap
+    # creating colormap
     colors: list = colorlist.gen_color_normalized(
         cmap="viridis", data_arr=alignment_length)
 
@@ -33,9 +39,10 @@ def render_graph(gfa_file: str, debug: bool = False) -> None:
         ax=ax, pad=.05, extend='both', fraction=1)
     ax.axis('off')
     savefig(f"{gfa_file.split('.')[0]}_cbar.png", bbox_inches='tight')
-
+    # rotating img for display
     Image.open(f"{gfa_file.split('.')[0]}_cbar.png").rotate(
         90, Image.NEAREST, expand=True).save(f"{gfa_file.split('.')[0]}_cbar.png")
+    """
 
     # Get all alignment sources
     alignment_sources: set = set([int(l.split()[6][5:]) for l in open(
@@ -92,14 +99,13 @@ def render_graph(gfa_file: str, debug: bool = False) -> None:
     outfile[10] = f"<h1>Graph for <b>{gfa_file.split('.')[0].split('/')[-1]}</b></h1><img src='{gfa_file.split('.')[0].split('/')[-1]}_cbar.png' align='center' rotate='90'>\n<img src='{gfa_file.split('.')[0].split('/')[-1]}_legend.png' align='center'>"
     with open(f"{gfa_file.split('.')[0]}_graph.html", "w", encoding="utf-8") as html_writer:
         html_writer.writelines(outfile)
+    """
 
 
 if __name__ == "__main__":
 
-    parser = ArgumentParser(add_help=False)
+    parser = ArgumentParser()
     parser.add_argument("file", type=str, help="gfa-like file")
-    parser.add_argument('-h', '--help', action='help', default=SUPPRESS,
-                        help='Plot a interactive html graph given a rGFA file.')
     parser.add_argument(
         "-d", "--debug", help="Plot less nodes in order to create a toy file", action='store_true')
     args = parser.parse_args()

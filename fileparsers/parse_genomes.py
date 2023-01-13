@@ -1,5 +1,5 @@
 "Isolates from tags from fasta file"
-from argparse import ArgumentParser
+from argparse import ArgumentParser, SUPPRESS
 from json import dump
 from Bio import SeqIO
 
@@ -63,7 +63,7 @@ def isolate_scaffolds(fasta_file: str, paf_file: str, chromosom: str) -> None:
 
 if __name__ == "__main__":
 
-    parser = ArgumentParser()
+    parser = ArgumentParser(add_help=False)
     parser.add_argument(
         "file", type=str, help="fasta-like file")
     parser.add_argument(
@@ -71,6 +71,8 @@ if __name__ == "__main__":
     parser.add_argument(
         "chromosom", type=str, help="name of assembly on reference sequence")
     args = parser.parse_args()
+    parser.add_argument('-h', '--help', action='help', default=SUPPRESS,
+                        help='Extracts from a fasta-like file all sequences in a query assembly given a mapping to a reference and an identifier on reference.')
 
     isolate_scaffolds(fasta_file=args.file,
                       paf_file=args.paffile, chromosom=args.chromosom)
