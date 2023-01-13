@@ -12,3 +12,4 @@ if __name__ == "__main__":
 
     # print(gfa_graph.dovetails)
     print(gfa_graph.segment_names)
+    print(gfa_graph.path_names)
