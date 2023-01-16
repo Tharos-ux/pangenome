@@ -10,6 +10,8 @@ if __name__ == "__main__":
 
     gfa_graph: Gfa = Gfa.from_file(args.file, dialect="standard")  # rgfa
 
-    # print(gfa_graph.dovetails)
-    print(gfa_graph.segment_names)
-    print(gfa_graph.path_names)
+    # some_segment = gfa_graph.segment_names[3]
+    # print(some_segment)
+    print(gfa_graph.edges)
+    # print(gfa_graph.is_cut_segment(gfa_graph.line(some_segment)))
+    # print(gfa_graph.segment_connected_component("4"))

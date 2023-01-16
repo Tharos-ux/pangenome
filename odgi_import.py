@@ -30,7 +30,21 @@ if __name__ == "__main__":
 
     og_file = convert_graph(gfa_file=args.file)
 
-    if og_file is not None:
-        g = odgi.graph()
-        g.load(og_file)
-        print(g.get_node_count())
+    if og_file is None:  # guard
+        exit()
+
+    g = odgi.graph()
+    g.load(og_file)
+    print(
+        f"Sucessfully loaded file containing {g.get_node_count()} nodes and {g.get_path_count()} paths.")
+
+    step = g.path_begin(path)
+    while (g.has_next_step(step)):
+        # get the node handle from the step handle
+        current_node_handle = g.get_handle_of_step(step)
+        # ask the node handle for the sequence
+        print(g.get_sequence(current_node_handle))
+        # progress to the next step
+        step = g.get_next_step(step)
+    current_node_handle = g.get_handle_of_step(step)
+    print(g.get_sequence(current_node_handle))
