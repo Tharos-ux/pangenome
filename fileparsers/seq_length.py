@@ -10,7 +10,7 @@ def show_assemblies_size(fasta_file: str) -> None:
         fasta_file (str): a path to a fasta like file
     """
     for fasta in SeqIO.parse(open(fasta_file, encoding="utf-8"), 'fasta'):
-        print(f"{fasta.id} -> {fasta.seq} bases long")
+        print(f"{fasta.id} -> {len(fasta.seq)} bases long")
 
 
 if __name__ == "__main__":
