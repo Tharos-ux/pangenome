@@ -75,6 +75,7 @@ def render_graph(gfa_file: str, debug: bool = False) -> None:
             if line[0] == "S" and ((debug and i < 10) or not debug):
                 graph.add_node(sub('\D', '', line.split()[1]), size=4+(16*alignment_length[i]), color=my_cmap[int(line.split()[6][5:])],
                                title=f"Seq. length:{len(line.split()[2])}\n"+'\n'.join(line.split()[3:]))
+
                 i += 1
             if line[0] == "L" and ((debug and j < 10) or not debug):
 
@@ -98,7 +99,7 @@ def render_graph(gfa_file: str, debug: bool = False) -> None:
                 k += 1
 
     graph_visualizer = Network(
-        height='900px', width='100%', directed=True)
+        height='1000px', width='100%', directed=True)
     graph_visualizer.toggle_physics(True)
     graph_visualizer.from_nx(graph)
     graph_visualizer.set_edge_smooth('dynamic')
@@ -110,7 +111,8 @@ def render_graph(gfa_file: str, debug: bool = False) -> None:
 
     with open(f"{gfa_file.split('.')[0]}_graph.html", "r", encoding="utf-8") as html_reader:
         outfile = html_reader.readlines()
-    outfile[10] = f"<h1>Graph for <b>{gfa_file.split('.')[0].split('/')[-1]}</b></h1><img src='{gfa_file.split('.')[0].split('/')[-1]}_cbar.png' align='center' rotate='90'>\n<img src='{gfa_file.split('.')[0].split('/')[-1]}_legend.png' align='center'>"
+        # <img src='{gfa_file.split('.')[0].split('/')[-1]}_cbar.png' align='center' rotate='90'>
+    outfile[10] = f"<h1>Graph for <b>{gfa_file.split('.')[0].split('/')[-1]}</b><img src='{gfa_file.split('.')[0].split('/')[-1]}_legend.png' align='center'></h1>"
     with open(f"{gfa_file.split('.')[0]}_graph.html", "w", encoding="utf-8") as html_writer:
         html_writer.writelines(outfile)
 
