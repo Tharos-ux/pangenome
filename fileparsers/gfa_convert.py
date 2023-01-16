@@ -75,12 +75,40 @@ def rgfa_to_gfa(input_file: str, output_file: str, p_lines: bool = False, keep_t
             paths_to_keep: list = []
             for (path, cigars) in visited_paths:
                 if find_bool_subpath(path, paths_to_keep):
-                    paths_to_keep.append((path, cigars))
+                    paths_to_keep, status = chain(path, cigars, paths_to_keep)
+                    if not status:
+                        paths_to_keep.append((path, cigars))
 
                     # Writing P-lines
             for path_number, (line, cigar) in enumerate(paths_to_keep):
                 gfa_writer.write(
                     f"\nP\t{path_number+number_of_nodes}\t{line}\t{cigar}")
+
+
+def chain(path: str, cigar: str, list_of_paths: list) -> tuple:
+    """Given a duet of string and a list of tuples, looks if the first half of the tuple is a prefix or a suffix of sequence, and merges it if so
+
+    Args:
+        path (str): the string we look for a prefix or suffix
+        cigar (str): tags associated to the string
+        list_of_paths (list): the list we search into
+
+    Returns:
+        tuple: (updated list, bool if a change was made)
+    """
+    changed_state = False
+    for i, (p, c) in enumerate(list_of_paths):
+        if p.split(',')[-1] == path.split(',')[0]:
+            # current path is the suffix of loop path
+            list_of_paths[i] = (
+                f"{p},{','.join(path.split(',')[1:])}", f"{c},{','.join(cigar.split(',')[1:])}")
+            changed_state = True
+        elif p.split(',')[0] == path.split(',')[-1]:
+            # current path is the prefix of loop path
+            list_of_paths[i] = (
+                f"{','.join(path.split(',')[:-1])},{p}", f"{','.join(cigar.split(',')[:-1])},{c}")
+            changed_state = True
+    return list_of_paths, changed_state
 
 
 def find_bool_subpath(path: str, list_of_paths: list) -> bool:
