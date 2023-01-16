@@ -38,6 +38,7 @@ if __name__ == "__main__":
     print(
         f"Sucessfully loaded file containing {g.get_node_count()} nodes and {g.get_path_count()} paths.")
 
+    path = g.get_path_handle('1600')
     step = g.path_begin(path)
     while (g.has_next_step(step)):
         # get the node handle from the step handle
