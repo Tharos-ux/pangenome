@@ -21,7 +21,7 @@ cactus-minigraph ./jobstore_$4 $1 $2.gfa --reference $3
 cactus-graphmap ./jobstore_$4 $1 $2.gfa $2.paf  --reference $3 --outputFasta $2.sv.gfa.fa.gz
 
 # creating hal (cactus base alignment)
-cactus-align ./jobstore_$4 $1 $2.paf $2.hal --pangenome --outVG --reference $3 
+cactus-align ./jobstore_$4 $1 $2.paf $2.hal --pangenome --outGFA --reference $3 
 
 # $1 must be a txt file from the format 
 # Diploid sample:
