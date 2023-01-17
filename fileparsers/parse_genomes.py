@@ -2,6 +2,7 @@
 from argparse import ArgumentParser, SUPPRESS
 from json import dump
 from Bio import SeqIO
+from os import remove
 
 
 def export_mapping(paf_file: str, save: bool = False) -> list:
@@ -41,18 +42,20 @@ def isolate_scaffolds(fasta_file: str, paf_file: str, chromosom: str) -> None:
         paf_file (str): mapping of reference against query
         chromosom (str): chromosom identifier, name used on reference file
     """
-    retcodes: list[int] = [
-        SeqIO.write(
-            fasta, f"{fasta_file}_chr{chromosom}.fasta", 'fasta'
-        )
-        for fasta in SeqIO.parse(
-            open(fasta_file, encoding="utf-8"), 'fasta'
-        )
-        if fasta.id in
-        [
-            x['query_seq_name']for x in export_mapping(paf_file=paf_file, save=False) if x['ref_seq_name'] == chromosom
+    remove(f"{fasta_file}_chr{chromosom}.fasta")
+    with open(f"{fasta_file}_chr{chromosom}.fasta", 'a', encoding="utf-8") as handler:
+        retcodes: list[int] = [
+            SeqIO.write(
+                fasta, handler, 'fasta'
+            )
+            for fasta in SeqIO.parse(
+                open(fasta_file, 'r', encoding="utf-8"), 'fasta'
+            )
+            if fasta.id in
+            [
+                x['query_seq_name'] for x in export_mapping(paf_file=paf_file, save=False) if x['ref_seq_name'] == chromosom
+            ]
         ]
-    ]
 
     if not all(retcodes):
         print(f"For chromosom {chromosom}, parsing failed.")
