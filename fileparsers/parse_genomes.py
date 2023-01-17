@@ -2,7 +2,7 @@
 from argparse import ArgumentParser, SUPPRESS
 from json import dump
 from Bio import SeqIO
-from os import remove
+from os import remove, path
 
 
 def export_mapping(paf_file: str, save: bool = False) -> list:
@@ -42,8 +42,10 @@ def isolate_scaffolds(fasta_file: str, paf_file: str, chromosom: str) -> None:
         paf_file (str): mapping of reference against query
         chromosom (str): chromosom identifier, name used on reference file
     """
-    remove(f"{fasta_file}_chr{chromosom}.fasta")
-    with open(f"{fasta_file}_chr{chromosom}.fasta", 'a', encoding="utf-8") as handler:
+    filepath: str = f"{fasta_file}_chr{chromosom}.fasta"
+    if path.exists(filepath):
+        remove(filepath)
+    with open(filepath, 'a', encoding="utf-8") as handler:
         retcodes: list[int] = [
             SeqIO.write(
                 fasta, handler, 'fasta'
