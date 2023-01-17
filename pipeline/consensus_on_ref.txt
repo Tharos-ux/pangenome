@@ -1,5 +1,5 @@
 # Reference sample
-ARSUCD  ./data/ARS-UCD1.2_Btau5.0.1Y.fa_chr3.fasta
+ARSUCD  ./data/ARS-UCD_chr3.fasta
 
 # Consensus sample
-SeqBt1  ./data/seqoccin.Bt.v1.0.fasta_chr3.fasta
+SeqBt1  ./data/Consensus_chr3.fasta
