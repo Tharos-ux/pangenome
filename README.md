@@ -22,6 +22,7 @@ scp file.txt sdubois@genossh.genouest.org:/groups/thermin/StreptoThermoGenomes
 scp file.txt sdubois@genossh.genouest.org:/home/genouest/genscale/sdubois
 ```
 
+cd /scratch/sdubois/Stage_M2/pangenome/
 srun --pty bash
 . /local/env/envconda.sh
 conda activate .env/
