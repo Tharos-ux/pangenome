@@ -190,9 +190,9 @@ def subsampling_rgfa(input_file: str, output_file: str, nodes: list, keep_tags: 
         keep_tags (bool, optional): if rGFA-specific should be in output file. Defaults to True.
     """
     nodes_to_keep: list = [sub('\D', '', node) for node in nodes]
+    nodes_names: list = [i+1 for i in range(len(nodes_to_keep))]
     with open(output_file, "w", encoding="utf-8") as gfa_writer:
         pass
-    link_informations: list = []
     with open(output_file, "a", encoding="utf-8") as gfa_writer:
         with open(input_file, "r", encoding="utf-8") as gfa_reader:
             for line in gfa_reader:
@@ -201,22 +201,20 @@ def subsampling_rgfa(input_file: str, output_file: str, nodes: list, keep_tags: 
                 if datas[0] == 'S' and sub('\D', '', datas[1]) in nodes_to_keep:
                     if keep_tags:
                         gfa_writer.write(
-                            '\n'+'\t'.join([datas[0], sub('\D', '', datas[1])]+datas[2:]))
+                            '\t'.join([datas[0], str(nodes_names[nodes_to_keep.index(sub('\D', '', datas[1]))])]+datas[2:])+'\n')
                     else:
                         gfa_writer.write(
-                            '\n'+'\t'.join([datas[0], sub('\D', '', datas[1]), datas[2]]))
+                            '\t'.join([datas[0], str(nodes_names[nodes_to_keep.index(sub('\D', '', datas[1]))])]+[datas[2]])+'\n')
                 # Link
                 elif datas[0] == 'L' and sub('\D', '', datas[1]) in nodes_to_keep and sub('\D', '', datas[3]) in nodes_to_keep:
                     if keep_tags:
                         gfa_writer.write(
-                            '\n'+'\t'.join([datas[0], sub('\D', '', datas[1]), datas[2], sub('\D', '', datas[3])]+datas[4:]))
+                            '\t'.join([datas[0], str(nodes_names[nodes_to_keep.index(sub('\D', '', datas[1]))]),
+                                      datas[2], str(nodes_names[nodes_to_keep.index(sub('\D', '', datas[3]))])] + datas[4:]) + '\n')
                     else:
                         gfa_writer.write(
-                            '\n'+'\t'.join([datas[0], sub('\D', '', datas[1]), datas[2], sub('\D', '', datas[3]), datas[4], datas[5]]))
-                    # datas[5] == cigar
-                    # datas[6][5:] == origin_sequence
-                    link_informations.append(
-                        (sub('\D', '', datas[1])+datas[2], sub('\D', '', datas[3])+datas[4], datas[5], datas[6][5:]))
+                            '\t'.join([datas[0], str(nodes_names[nodes_to_keep.index(sub('\D', '', datas[1]))]),
+                                      datas[2], str(nodes_names[nodes_to_keep.index(sub('\D', '', datas[3]))])] + [datas[4]]) + '\n')
 
 
 if __name__ == "__main__":
