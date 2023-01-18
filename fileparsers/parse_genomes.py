@@ -46,24 +46,9 @@ def isolate_scaffolds(fasta_file: str, out_file: str, paf_file: str, chromosom: 
     if path.exists(out_file):
         remove(out_file)
     with open(out_file, 'a', encoding="utf-8") as handler:
-        retcodes: list[int] = [
-            SeqIO.write(
-                fasta, handler, 'fasta'
-            )
-            for fasta in SeqIO.parse(
-                open(fasta_file, 'r', encoding="utf-8"), 'fasta'
-            )
-            if fasta.id in
-            [
-                x['query_seq_name'] for x in export_mapping(paf_file=paf_file, save=False) if x['ref_seq_name'] == chromosom
-            ]
-        ]
-
-    if not all(retcodes):
-        print(f"For chromosom {chromosom}, parsing failed.")
-    else:
-        print(
-            f"For chromosom {chromosom}, {len(retcodes)} sequences were isolated.")
+        for fasta in SeqIO.parse(open(fasta_file, 'r', encoding="utf-8"), 'fasta'):
+            if fasta.id in [x['query_seq_name'] for x in export_mapping(paf_file=paf_file, save=False) if x['ref_seq_name'] == chromosom]:
+                SeqIO.write(fasta, handler, 'fasta')
 
 
 if __name__ == "__main__":
