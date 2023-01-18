@@ -34,18 +34,18 @@ def export_mapping(paf_file: str, save: bool = False) -> list:
     return mapping
 
 
-def isolate_scaffolds(fasta_file: str, paf_file: str, chromosom: str) -> None:
+def isolate_scaffolds(fasta_file: str, out_file: str, paf_file: str, chromosom: str) -> None:
     """Isolate scaffolds based upon correspondances from reference to query
 
     Args:
         fasta_file (str): query file
+        out_file (str): path for output
         paf_file (str): mapping of reference against query
         chromosom (str): chromosom identifier, name used on reference file
     """
-    filepath: str = f"{fasta_file}_chr{chromosom}.fasta"
-    if path.exists(filepath):
-        remove(filepath)
-    with open(filepath, 'a', encoding="utf-8") as handler:
+    if path.exists(out_file):
+        remove(out_file)
+    with open(out_file, 'a', encoding="utf-8") as handler:
         retcodes: list[int] = [
             SeqIO.write(
                 fasta, handler, 'fasta'
@@ -71,6 +71,8 @@ if __name__ == "__main__":
     parser = ArgumentParser(add_help=False)
     parser.add_argument(
         "file", type=str, help="fasta-like file")
+    parser.add_argument(
+        "out", type=str, help="fasta-like file")
     parser.add_argument(
         "paffile", type=str, help="paf-like file")
     parser.add_argument(

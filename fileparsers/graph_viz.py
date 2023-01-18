@@ -1,22 +1,23 @@
 "GFA file vizualizer"
 from argparse import ArgumentParser, SUPPRESS
+from random import randrange
+from re import sub
 from pyvis.network import Network
-from networkx import Graph, DiGraph, MultiDiGraph
+from networkx import MultiDiGraph
 from mycolorpy import colorlist
 from PIL import Image
 from matplotlib import cm
 from matplotlib.colors import Normalize
 from matplotlib.pyplot import subplots, savefig, plot, legend, figure
-from re import sub
-from random import randrange
 
 
-def render_graph(gfa_file: str, debug: bool = False) -> None:
+def render_graph(gfa_file: str, debug: bool = False, plines: bool = False) -> None:
     """Creates a interactive .html file representing the given graph
 
     Args:
         gfa_file (str): path to a rGFA file
         debug (bool, optional): plots less nodes in graph. Defaults to False.
+        plines (bool, optional) : plots the P-lines as paths on the graph. Defaults to False.
     """
     # S are nodes and L are edges
     alignment_length: list = [len(l.split()[2]) for l in open(
@@ -24,13 +25,13 @@ def render_graph(gfa_file: str, debug: bool = False) -> None:
     maximum_alignment: int = max(alignment_length)
     alignment_length: list = [l/maximum_alignment for l in alignment_length]
     # Creating a colormap
-    colors: list = colorlist.gen_color_normalized(
-        cmap="viridis", data_arr=alignment_length)
-    paths: list = [l.split() for l in open(
-        gfa_file, "r", encoding="utf-8") if l.split()[0] == "P"]
-    number_paths: int = len(paths)
-    colors_paths: list = colorlist.gen_color_normalized(
-        cmap="copper", data_arr=[i/number_paths for i in range(number_paths)])
+    colors_paths: list = []
+    if plines:
+        paths: list = [l.split() for l in open(
+            gfa_file, "r", encoding="utf-8") if l.split()[0] == "P"]
+        number_paths: int = len(paths)
+        colors_paths: list = colorlist.gen_color_normalized(
+            cmap="copper", data_arr=[i/number_paths for i in range(number_paths)])
 
     # Creating the colorbar for legend
     fig, ax = subplots(1, 1)
@@ -86,7 +87,7 @@ def render_graph(gfa_file: str, debug: bool = False) -> None:
                     graph.add_edge(line.split()[1],
                                    line.split()[3], color=my_cmap[int(line.split()[6][5:])], weight=1.5, label=f"{line.split()[2]}/{line.split()[4]}")
                 j += 1
-            if line[0] == "P" and ((debug and k < 10) or not debug):
+            if line[0] == "P" and ((debug and k < 10) or not debug) and plines:
                 color: int = randrange(len(colors_paths))
                 path_to_incorporate: list = [
                     sub('\D', '', data) for data in line.split()[2].split(',')]
@@ -125,6 +126,8 @@ if __name__ == "__main__":
                         help='Plot a interactive html graph given a rGFA file.')
     parser.add_argument(
         "-d", "--debug", help="Plot less nodes in order to create a toy file", action='store_true')
+    parser.add_argument(
+        "-p", "--p_lines", help="Plot less nodes in order to create a toy file", action='store_true')
     args = parser.parse_args()
 
-    render_graph(gfa_file=args.file, debug=args.debug)
+    render_graph(gfa_file=args.file, debug=args.debug, plines=args.p_lines)

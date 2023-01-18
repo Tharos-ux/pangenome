@@ -40,116 +40,144 @@ def rgfa_to_gfa(input_file: str, output_file: str, p_lines: bool = False, keep_t
                         gfa_writer.write(
                             '\n'+'\t'.join([datas[0], sub('\D', '', datas[1]), datas[2], sub('\D', '', datas[3]), datas[4], datas[5]]))
                     # datas[5] == cigar
+                    # datas[6][5:] == origin_sequence
                     link_informations.append(
-                        (sub('\D', '', datas[1])+datas[2], sub('\D', '', datas[3])+datas[4], datas[5]))
+                        (sub('\D', '', datas[1])+datas[2], sub('\D', '', datas[3])+datas[4], datas[5], datas[6][5:]))
                 # We don't really know linetype
                 else:
                     gfa_writer.write('\n'+'\t'.join(datas))
         if p_lines:
             # We need to add P-lines at this point
             visited_paths: list = []
-            for (edge_a, edge_b, cigar_left) in link_informations:
-                for (edge_c, edge_d, cigar_right) in link_informations:
-                    if (edge_a, edge_b) != (edge_c, edge_d) and edge_b == edge_c:
+            for (edge_a, edge_b, cigar_left, origin_seq_alpha) in link_informations:
+                for (edge_c, edge_d, cigar_right, origin_seq_beta) in link_informations:
+                    if (edge_a, edge_b) != (edge_c, edge_d) and edge_b == edge_c and origin_seq_beta == origin_seq_alpha:
                         # We found a chain
-                        if find_bool_subpath(f"{edge_a},{edge_b},{edge_d}", visited_paths):
+                        if find_bool_subpath(f"{edge_a},{edge_b},{edge_d}", origin_seq_alpha, visited_paths):
                             # If a-X-b is not already written in any path
                             suffixes_positions: list = find_suffix(
-                                f"{edge_a},{edge_c}", visited_paths)
+                                f"{edge_a},{edge_c}",
+                                origin_seq_alpha,
+                                visited_paths
+                            )
                             prefixes_positions: list = find_prefix(
-                                f"{edge_b},{edge_d}", visited_paths)
+                                f"{edge_b},{edge_d}",
+                                origin_seq_alpha,
+                                visited_paths
+                            )
                             # Lookup for suffixes & prefixes
                             if len(suffixes_positions) > 0:
                                 for pos in suffixes_positions:
                                     visited_paths[pos] = (
-                                        f"{visited_paths[pos][0]},{edge_d}", f"{visited_paths[pos][1]},{cigar_right}")
+                                        f"{visited_paths[pos][0]},{edge_d}",
+                                        f"{visited_paths[pos][1]},{cigar_right}",
+                                        visited_paths[pos][2]
+                                    )
                             elif len(prefixes_positions) > 0:
                                 for pos in prefixes_positions:
                                     visited_paths[pos] = (
-                                        f"{edge_a},{visited_paths[pos][0]}", f"{cigar_left},{visited_paths[pos][1]}")
+                                        f"{edge_a},{visited_paths[pos][0]}",
+                                        f"{cigar_left},{visited_paths[pos][1]}",
+                                        visited_paths[pos][2]
+                                    )
                             else:
                                 # De-novo path
                                 visited_paths += [
-                                    (f"{edge_a},{edge_b},{edge_d}", f"{cigar_left},{cigar_right}")]
+                                    (f"{edge_a},{edge_b},{edge_d}", f"{cigar_left},{cigar_right}", origin_seq_alpha)]
             # Cleaning subsequences
             paths_to_keep: list = []
-            for (path, cigars) in visited_paths:
-                if find_bool_subpath(path, paths_to_keep):
-                    paths_to_keep, status = chain(path, cigars, paths_to_keep)
-                    if not status:
-                        paths_to_keep.append((path, cigars))
+            for (path, cigars, origin) in visited_paths:
+                if find_bool_subpath(path, origin, paths_to_keep):
+                    paths_to_keep, chained = deep_chains(
+                        path, cigars, origin, paths_to_keep, 3)
+                    if not chained:
+                        paths_to_keep.append((path, cigars, origin))
 
                     # Writing P-lines
-            for path_number, (line, cigar) in enumerate(paths_to_keep):
+            for path_number, (line, cigar, _) in enumerate(paths_to_keep):
                 gfa_writer.write(
                     f"\nP\t{path_number+number_of_nodes}\t{line}\t{cigar}")
 
 
-def chain(path: str, cigar: str, list_of_paths: list) -> tuple:
+def deep_chains(path: str, cigar: str, origin: str, list_of_paths: list, max_depth: int) -> tuple:
     """Given a duet of string and a list of tuples, looks if the first half of the tuple is a prefix or a suffix of sequence, and merges it if so
 
     Args:
         path (str): the string we look for a prefix or suffix
         cigar (str): tags associated to the string
+        origin (str) : the origin sequence of the 'path'
         list_of_paths (list): the list we search into
+        max_depth (int): gives the maximum number of segments we have to compare (depth>0)
 
     Returns:
         tuple: (updated list, bool if a change was made)
     """
-    changed_state = False
-    for i, (p, c) in enumerate(list_of_paths):
-        if p.split(',')[-1] == path.split(',')[0]:
-            # current path is the suffix of loop path
-            list_of_paths[i] = (
-                f"{p},{','.join(path.split(',')[1:])}", f"{c},{','.join(cigar.split(',')[1:])}")
-            changed_state = True
-        elif p.split(',')[0] == path.split(',')[-1]:
-            # current path is the prefix of loop path
-            list_of_paths[i] = (
-                f"{','.join(path.split(',')[:-1])},{p}", f"{','.join(cigar.split(',')[:-1])},{c}")
-            changed_state = True
-    return list_of_paths, changed_state
+    for i, (p, c, o) in enumerate(list_of_paths):
+        if o == origin:
+            query: list = path.split(',')
+            ref: list = p.split(',')
+            for depth in range(1, max_depth+1):
+                if all([query[r] == ref[r-depth] for r in range(depth)]):
+                    # current path is the suffix of loop path
+                    list_of_paths[i] = (
+                        f"{p},{','.join(path.split(',')[depth:])}",
+                        f"{c},{','.join(cigar.split(',')[depth:])}",
+                        origin
+                    )
+                    return list_of_paths, True
+                elif all([ref[r] == query[r-depth] for r in range(depth)]):
+                    # current path is the prefix of loop path
+                    list_of_paths[i] = (
+                        f"{','.join(path.split(',')[:-1])},{p}",
+                        f"{','.join(cigar.split(',')[:-1])},{c}",
+                        origin
+                    )
+                    return list_of_paths, True
+    return list_of_paths, False
 
 
-def find_bool_subpath(path: str, list_of_paths: list) -> bool:
+def find_bool_subpath(path: str, origin: str, list_of_paths: list) -> bool:
     """Given a string and a list of string, returns if path is not a substring of list of strings.
 
     Args:
         path (str): a path we want to find
+        origin (str) : the origin sequence of the path
         list_of_paths (list): a path where we may find our subpath
 
     Returns:
         bool: if sequence is NOT subsequence of any, or equal
     """
-    return not any([True for (p, _) in list_of_paths if path in p])
+    return not any([path in p and o == origin for (p, _, o) in list_of_paths])
 
 
-def find_suffix(path: str, list_of_paths: list) -> list:
+def find_suffix(path: str, origin: str, list_of_paths: list) -> list:
     """Given a string and a list of strings, returns positions of list where string is a suffix
 
     Args:
         path (str): sequence we look for
+        origin (str) : the origin sequence of the path
         list_of_paths (list): table we look into
 
     Returns:
         list: positions of occurences
     """
     a, b = path.split(',')
-    return [i for i, (p, _) in enumerate(list_of_paths) if p.split(',')[-2] == a and p.split(',')[-1] == b]
+    return [i for i, (p, _, o) in enumerate(list_of_paths) if p.split(',')[-2] == a and p.split(',')[-1] == b and origin == o]
 
 
-def find_prefix(path: str, list_of_paths: list) -> list:
+def find_prefix(path: str, origin: str, list_of_paths: list) -> list:
     """Given a string and a list of strings, returns positions of list where string is a suffix
 
     Args:
         path (str): sequence we look for
+        origin (str) : the origin sequence of the path
         list_of_paths (list): table we look into
 
     Returns:
         list: positions of occurences
     """
     a, b = path.split(',')
-    return [i for i, (p, _) in enumerate(list_of_paths) if p.split(',')[0] == a and p.split(',')[1] == b]
+    return [i for i, (p, _, o) in enumerate(list_of_paths) if p.split(',')[0] == a and p.split(',')[1] == b and origin == o]
 
 
 if __name__ == "__main__":
