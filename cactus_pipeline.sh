@@ -3,6 +3,7 @@
 #SBATCH --cpus-per-task=8
 #SBATCH --mem=80G
 #SBATCH --output=LOG_cactus.log
+#SBATCH --constraint avx2
 
 source /scratch/sdubois/Stage_M2/cactus-bin-v2.4.0/cactus_env/bin/activate
 
