@@ -72,7 +72,7 @@ if __name__ == "__main__":
     parser.add_argument(
         "file", type=str, help="fasta-like file")
     parser.add_argument(
-        "out", type=str, help="fasta-like file")
+        "out", type=str, help="fasta-like output")
     parser.add_argument(
         "paffile", type=str, help="paf-like file")
     parser.add_argument(
@@ -81,5 +81,5 @@ if __name__ == "__main__":
     parser.add_argument('-h', '--help', action='help', default=SUPPRESS,
                         help='Extracts from a fasta-like file all sequences in a query assembly given a mapping to a reference and an identifier on reference.')
 
-    isolate_scaffolds(fasta_file=args.file,
+    isolate_scaffolds(fasta_file=args.file, out_file=args.out,
                       paf_file=args.paffile, chromosom=args.chromosom)
