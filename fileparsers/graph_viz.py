@@ -127,7 +127,7 @@ if __name__ == "__main__":
     parser.add_argument(
         "-d", "--debug", help="Plot less nodes in order to create a toy file", action='store_true')
     parser.add_argument(
-        "-p", "--p_lines", help="Plot less nodes in order to create a toy file", action='store_true')
+        "-p", "--p_lines", help="Shows P-lines as secondary paths", action='store_true')
     args = parser.parse_args()
 
     render_graph(gfa_file=args.file, debug=args.debug, plines=args.p_lines)

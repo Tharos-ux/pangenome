@@ -43,13 +43,19 @@ def isolate_scaffolds(fasta_file: str, out_file: str, paf_file: str, chromosom: 
         paf_file (str): mapping of reference against query
         chromosom (str): chromosom identifier, name used on reference file
     """
+    nb_seq, length = 0, 0
     if path.exists(out_file):
+        print(f"Erasing {out_file}")
         remove(out_file)
     with open(out_file, 'a', encoding="utf-8") as handler:
         for fasta in SeqIO.parse(open(fasta_file, 'r', encoding="utf-8"), 'fasta'):
             if fasta.id in [x['query_seq_name'] for x in export_mapping(paf_file=paf_file, save=False) if x['ref_seq_name'] == chromosom]:
                 print(f"Writing {fasta.id} to {out_file}...")
                 SeqIO.write(fasta, handler, 'fasta')
+                nb_seq += 1
+                length += len(fasta.seq)
+        print(
+            f"Job done, {nb_seq} sequences were written for a total of {length} bases!")
 
 
 if __name__ == "__main__":

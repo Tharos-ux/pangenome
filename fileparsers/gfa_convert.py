@@ -180,6 +180,45 @@ def find_prefix(path: str, origin: str, list_of_paths: list) -> list:
     return [i for i, (p, _, o) in enumerate(list_of_paths) if p.split(',')[0] == a and p.split(',')[1] == b and origin == o]
 
 
+def subsampling_rgfa(input_file: str, output_file: str, nodes: list, keep_tags: bool = True) -> None:
+    """From an input rGFA file, extracts lines corresponding to the subgraph within the list of nodes
+
+    Args:
+        input_file (str): input rGFA
+        output_file (str): output rGFA
+        nodes (list): all nodes we should keep
+        keep_tags (bool, optional): if rGFA-specific should be in output file. Defaults to True.
+    """
+    nodes_to_keep: list = [sub('\D', '', node) for node in nodes]
+    with open(output_file, "w", encoding="utf-8") as gfa_writer:
+        pass
+    link_informations: list = []
+    with open(output_file, "a", encoding="utf-8") as gfa_writer:
+        with open(input_file, "r", encoding="utf-8") as gfa_reader:
+            for line in gfa_reader:
+                datas: list = line.split()
+                # Segment
+                if datas[0] == 'S' and sub('\D', '', datas[1]) in nodes_to_keep:
+                    if keep_tags:
+                        gfa_writer.write(
+                            '\n'+'\t'.join([datas[0], sub('\D', '', datas[1])]+datas[2:]))
+                    else:
+                        gfa_writer.write(
+                            '\n'+'\t'.join([datas[0], sub('\D', '', datas[1]), datas[2]]))
+                # Link
+                elif datas[0] == 'L' and sub('\D', '', datas[1]) in nodes_to_keep and sub('\D', '', datas[3]) in nodes_to_keep:
+                    if keep_tags:
+                        gfa_writer.write(
+                            '\n'+'\t'.join([datas[0], sub('\D', '', datas[1]), datas[2], sub('\D', '', datas[3])]+datas[4:]))
+                    else:
+                        gfa_writer.write(
+                            '\n'+'\t'.join([datas[0], sub('\D', '', datas[1]), datas[2], sub('\D', '', datas[3]), datas[4], datas[5]]))
+                    # datas[5] == cigar
+                    # datas[6][5:] == origin_sequence
+                    link_informations.append(
+                        (sub('\D', '', datas[1])+datas[2], sub('\D', '', datas[3])+datas[4], datas[5], datas[6][5:]))
+
+
 if __name__ == "__main__":
 
     parser = ArgumentParser(add_help=False)
