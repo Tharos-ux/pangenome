@@ -1,0 +1,6 @@
+# Consensus sample
+SeqBt1  ./SeqBt1s3.fasta
+
+# Haplotypes samples
+BtChar.1    ./BtChar.1s3.fasta
+BtChar.2    ./BtChar.2s3.fasta
