@@ -1,6 +1,7 @@
 "Converts various GFA files"
 from argparse import ArgumentParser, SUPPRESS
 from re import sub
+from copy import deepcopy
 
 
 def rgfa_to_gfa(input_file: str, output_file: str, p_lines: bool = False, keep_tags: bool = False) -> None:
@@ -215,6 +216,21 @@ def subsampling_rgfa(input_file: str, output_file: str, nodes: list, keep_tags: 
                         gfa_writer.write(
                             '\t'.join([datas[0], str(nodes_names[nodes_to_keep.index(sub('\D', '', datas[1]))]),
                                       datas[2], str(nodes_names[nodes_to_keep.index(sub('\D', '', datas[3]))])] + [datas[4]]) + '\n')
+
+
+def reconstruct_fasta(input_file: str, output_file: str, paths_lists: list[list], paths_names: list) -> None:
+    with open(input_file, 'r', encoding='utf-8') as infile:
+        for line in infile:
+            if line.split()[0] == 'S':
+                for i, path in enumerate(paths_lists):
+                    try:
+                        paths_lists[i][path.index(sub('\D', '', line.split()[1]))] = line.split()[
+                            2].strip()
+                    except ValueError:
+                        pass
+    for i, seq in enumerate(paths_lists):
+        with open(f"{paths_names[i]}{output_file}", 'w', encoding='utf-8') as outfile:
+            outfile.write(f">{paths_names[i]}\n{''.join(seq)}")
 
 
 if __name__ == "__main__":
