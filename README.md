@@ -21,6 +21,7 @@ scp file.txt sdubois@genossh.genouest.org:/groups/thermin/StreptoThermoGenomes
 
 scp file.txt sdubois@genossh.genouest.org:/home/genouest/genscale/sdubois
 ```
+ssh sdubois@genossh.genouest.org
 
 cd /scratch/sdubois/Stage_M2/pangenome/
 srun --pty bash

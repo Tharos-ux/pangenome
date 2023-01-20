@@ -3,22 +3,17 @@ from argparse import ArgumentParser, SUPPRESS
 from random import randrange
 from re import sub
 from pyvis.network import Network
-from networkx import MultiDiGraph
+from networkx import MultiDiGraph, is_isolate
 from mycolorpy import colorlist
 from PIL import Image
 from matplotlib import cm
 from matplotlib.colors import Normalize
 from matplotlib.pyplot import subplots, savefig, plot, legend, figure
+from collections import Counter
+from fileparsers.gfatypes import LineType, Record, GfaStyle
 
 
-def render_graph(gfa_file: str, debug: bool = False, plines: bool = False) -> None:
-    """Creates a interactive .html file representing the given graph
-
-    Args:
-        gfa_file (str): path to a rGFA file
-        debug (bool, optional): plots less nodes in graph. Defaults to False.
-        plines (bool, optional) : plots the P-lines as paths on the graph. Defaults to False.
-    """
+def compute_graph(gfa_file, gfa_version, plines: bool = False, save_legend: bool = False):
     # S are nodes and L are edges
     alignment_length: list = [len(l.split()[2]) for l in open(
         gfa_file, "r", encoding="utf-8") if l.split()[0] == "S"]
@@ -33,28 +28,22 @@ def render_graph(gfa_file: str, debug: bool = False, plines: bool = False) -> No
         colors_paths: list = colorlist.gen_color_normalized(
             cmap="copper", data_arr=[i/number_paths for i in range(number_paths)])
 
-    # Creating the colorbar for legend
-    fig, ax = subplots(1, 1)
-    norm = Normalize(vmin=0, vmax=maximum_alignment)
-    ax.figure.colorbar(
-        cm.ScalarMappable(norm=norm, cmap="viridis"),
-        ax=ax, pad=.05, extend='both', fraction=1)
-    ax.axis('off')
-    savefig(f"{gfa_file.split('.')[0]}_cbar.png", bbox_inches='tight')
-
-    Image.open(f"{gfa_file.split('.')[0]}_cbar.png").rotate(
-        90, Image.NEAREST, expand=True).save(f"{gfa_file.split('.')[0]}_cbar.png")
-
     # Get all alignment sources
-    alignment_sources: set = set([int(l.split()[6][5:]) for l in open(
-        gfa_file, "r", encoding="utf-8") if l.split()[0] == "L"])
+
+    if GfaStyle(gfa_version) == GfaStyle.RGFA:
+        alignment_sources: set = set([int(l.split()[6][5:]) for l in open(
+            gfa_file, "r", encoding="utf-8") if l.split()[0] == "L"])
+    elif GfaStyle(gfa_version) == GfaStyle.GFA1_1:
+        alignment_sources: set = set([int(l.split()[2]) for l in open(
+            gfa_file, "r", encoding="utf-8") if l.split()[0] == "W"])
+    else:
+        alignment_sources: set = set()
     max_source: int = max(alignment_sources)
-    normalized_sources: list = [s/max_source for s in alignment_sources]
+    normalized_sources: list = [s/(max_source+1) for s in alignment_sources]
     colors_sources: list = colorlist.gen_color_normalized(
         cmap="rainbow", data_arr=normalized_sources)
     my_cmap: dict = {source: colors_sources[i]
                      for i, source in enumerate(alignment_sources)}
-
     figure().clear()
     # Creating the legends for alignments
     handles = [plot([], [], marker="s", color=cs, ls="none")[0]
@@ -63,41 +52,83 @@ def render_graph(gfa_file: str, debug: bool = False, plines: bool = False) -> No
                framealpha=1, frameon=False)
     fig = l.figure  # type: ignore
     bbox = l.get_window_extent().transformed(fig.dpi_scale_trans.inverted())
-    fig.savefig(
-        f"{gfa_file.split('.')[0]}_legend.png", dpi="figure", bbox_inches=bbox)
+    if save_legend:
+        fig.savefig(
+            f"{gfa_file.split('.')[0]}_legend.png", dpi="figure", bbox_inches=bbox)
 
     graph = MultiDiGraph()
 
-    i: int = 0
-    j: int = 0
-    k: int = 0
+    line_counts: Counter = Counter({t.name: 0 for t in LineType})
     with open(gfa_file, "r", encoding="utf-8") as reader:
         for line in reader:
-            if line[0] == "S" and ((debug and i < 10) or not debug):
-                graph.add_node(sub('\D', '', line.split()[1]), size=4+(16*alignment_length[i]), color=my_cmap[int(line.split()[6][5:])],
-                               title=f"Seq. length:{len(line.split()[2])}\n"+'\n'.join(line.split()[3:]))
+            gfa_line: Record = Record(line, gfa_version)
+            match (gfa_line.linetype, gfa_line.gfastyle):
+                case (LineType.SEGMENT, GfaStyle.RGFA):
+                    graph.add_node(
+                        gfa_line.line.name,
+                        size=4 +
+                        (16*alignment_length[line_counts[LineType.SEGMENT]]),
+                        color=my_cmap[gfa_line.line.origin],
+                        title=f"Seq. length: {gfa_line.line.length}"
+                    )
+                case (LineType.SEGMENT, _):
+                    graph.add_node(
+                        gfa_line.line.name,
+                        size=4 +
+                        (16*alignment_length[line_counts[LineType.SEGMENT]]),
+                        title=f"Seq. length: {gfa_line.line.length}"
+                    )
+                case (LineType.LINE, GfaStyle.RGFA):
+                    if gfa_line.line.origin == 0:  # reference sequence
+                        graph.add_edge(
+                            gfa_line.line.start,
+                            gfa_line.line.end,
+                            color=my_cmap[gfa_line.line.origin],
+                            weight=3,
+                            label=gfa_line.line.orientation
+                        )
+                    else:
+                        graph.add_edge(
+                            gfa_line.line.start,
+                            gfa_line.line.end,
+                            color=my_cmap[gfa_line.line.origin],
+                            weight=1.5,
+                            label=gfa_line.line.orientation
+                        )
+                case (LineType.WALK, GfaStyle.GFA1_1):
+                    for (a, b) in gfa_line.line.walk:
+                        if not graph.has_edge(a, b):
+                            graph.add_edge(
+                                a,
+                                b,
+                                color=my_cmap[gfa_line.line.origin],
+                                weight=2,
+                            )
+                case (LineType.PATH, GfaStyle.RGFA):
+                    if plines:
+                        color: int = randrange(len(colors_paths))
+                        path_to_incorporate: list = [
+                            sub('\D', '', data) for data in line.split()[2].split(',')]
+                        node_duets_of_path: list = [
+                            (path_to_incorporate[pos], path_to_incorporate[pos+1]) for pos in range(len(path_to_incorporate)-1)]
+                        for (node_a, node_b) in node_duets_of_path:
+                            graph.add_edge(
+                                node_a, node_b, color=colors_paths[color], weight=0.5, arrows='?', label=line.split()[1])
+                        colors_paths.pop(color)
+            line_counts[gfa_line.linetype] += 1
+    return graph
 
-                i += 1
-            if line[0] == "L" and ((debug and j < 10) or not debug):
 
-                if int(line.split()[6][5:]) == 0:  # From reference sequence
-                    graph.add_edge(line.split()[1],
-                                   line.split()[3], color=my_cmap[int(line.split()[6][5:])], weight=3, label=f"{line.split()[2]}/{line.split()[4]}")
-                else:
-                    graph.add_edge(line.split()[1],
-                                   line.split()[3], color=my_cmap[int(line.split()[6][5:])], weight=1.5, label=f"{line.split()[2]}/{line.split()[4]}")
-                j += 1
-            if line[0] == "P" and ((debug and k < 10) or not debug) and plines:
-                color: int = randrange(len(colors_paths))
-                path_to_incorporate: list = [
-                    sub('\D', '', data) for data in line.split()[2].split(',')]
-                node_duets_of_path: list = [
-                    (path_to_incorporate[pos], path_to_incorporate[pos+1]) for pos in range(len(path_to_incorporate)-1)]
-                for (node_a, node_b) in node_duets_of_path:
-                    graph.add_edge(
-                        node_a, node_b, color=colors_paths[color], weight=0.5, arrows='?', label=line.split()[1])
-                colors_paths.pop(color)
-                k += 1
+def render_graph(gfa_file: str, debug: bool = False, plines: bool = False, gfa_version: str = 'rGFA') -> None:
+    """Creates a interactive .html file representing the given graph
+
+    Args:
+        gfa_file (str): path to a rGFA file
+        debug (bool, optional): plots less nodes in graph. Defaults to False.
+        plines (bool, optional) : plots the P-lines as paths on the graph. Defaults to False.
+    """
+    graph: MultiDiGraph = compute_graph(
+        gfa_file, gfa_version, save_legend=True)
 
     graph_visualizer = Network(
         height='1000px', width='100%', directed=True)
@@ -128,6 +159,13 @@ if __name__ == "__main__":
         "-d", "--debug", help="Plot less nodes in order to create a toy file", action='store_true')
     parser.add_argument(
         "-p", "--p_lines", help="Shows P-lines as secondary paths", action='store_true')
+    parser.add_argument(
+        "-g", "--gfa_version", help="Tells the GFA input style", required=True, choices=['rGFA', 'GFA1', 'GFA1.1', 'GFA1.2', 'GFA2'])
     args = parser.parse_args()
 
-    render_graph(gfa_file=args.file, debug=args.debug, plines=args.p_lines)
+    render_graph(
+        gfa_file=args.file,
+        debug=args.debug,
+        plines=args.p_lines,
+        gfa_version=args.gfa_version
+    )

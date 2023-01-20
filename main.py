@@ -1,14 +1,26 @@
-from fileparsers import subsampling_rgfa, reconstruct_fasta
-
+from argparse import ArgumentParser, SUPPRESS
+from networkx import number_of_isolates, number_of_edges, number_of_nodes
+from fileparsers import compute_graph, plot_distribution, lonely_nodes, neighboured_nodes
 
 if __name__ == '__main__':
-    # subsampling_rgfa('/udd/sidubois/Documents/Code/datas/rGFA/chr3_haplotypes_on_consensus.gfa','hapl_on_css_toy_graph.gfa', ['488', '489', '490', '491', '492', '493', '1465', '1323'])
 
-    paths: list = [
-        ['1', '2', '3', '4', '5', '6'],
-        ['1', '2', '3', '8', '4', '5', '6'],
-        ['1', '7', '3', '4', '6']
-    ]
+    parser = ArgumentParser(add_help=False)
+    parser.add_argument("file", type=str, help="gfa-like file", nargs='+')
+    parser.add_argument('-h', '--help', action='help', default=SUPPRESS,
+                        help='Plot distribution of node length across graph')
+    parser.add_argument(
+        "-g", "--gfa_version", help="Tells the GFA input style", required=True, choices=['rGFA', 'GFA1', 'GFA1.1', 'GFA1.2', 'GFA2'])
+    args = parser.parse_args()
 
-    reconstruct_fasta('hapl_on_css_toy_graph.gfa', 's3.fasta', paths, [
-                      'SeqBt1', 'BtChar.1', 'BtChar.2'])
+    graphs = [compute_graph(file, args.gfa_version) for file in args.file]
+    for graph in graphs:
+        print(f"Graph has {number_of_isolates(graph)} lonely nodes for a total of {number_of_nodes(graph)} nodes, and {number_of_edges(graph)} edges.")
+    counters: list = [neighboured_nodes(g) for g in graphs]
+    lonely: list = [lonely_nodes(g) for g in graphs]
+    for i, counter in enumerate(counters):
+        print(
+            f"Neighboured nodes : {sum([k for (k,_) in counter])}/{sum([v for (_,v) in counter])} || Lonely nodes : {sum([k for (k,_) in lonely[i]])}/{sum([v for (_,v) in lonely[i]])}")
+
+    names: list = [filepath.split('.')[0].split('/')[-1]
+                   for filepath in args.file]
+    plot_distribution(counters, lonely, names)
