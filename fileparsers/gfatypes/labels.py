@@ -73,6 +73,7 @@ class Record():
     class Path():
         """
         Modelizes a path within the graph
+        Path is of shape [ ( (a,+) , (b,+) ) ... ]
         """
 
         def __init__(self, datas: list, gfa_style: GfaStyle) -> None:
@@ -80,9 +81,8 @@ class Record():
                 raise ValueError(
                     f"Incompatible version format, P-lines vere added in GFA1 and were absent from {gfa_style}.")
             self.name = datas[1]
-            pathpath: list = datas[2].replace(
-                '-', '').replace('+', '').split(',')
-            self.path = [(pathpath[i], pathpath[i+1])
+            pathpath: list = datas[2].split(',')
+            self.path = [((pathpath[i][:-1], pathpath[i][-1]), (pathpath[i+1][:-1], pathpath[i+1][-1]))
                          for i in range(len(pathpath)-1)]
 
     class Header():

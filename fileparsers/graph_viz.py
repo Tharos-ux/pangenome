@@ -3,7 +3,7 @@ from argparse import ArgumentParser, SUPPRESS
 from random import randrange
 from re import sub
 from pyvis.network import Network
-from networkx import MultiDiGraph, is_isolate
+from networkx import MultiDiGraph, add_path
 from mycolorpy import colorlist
 from PIL import Image
 from matplotlib import cm
@@ -37,6 +37,44 @@ def assert_format(gfa_file: str, gfa_version: GfaStyle) -> LineType:
         return LineType.WALK
     elif is_present[LineType.PATH]:
         return LineType.PATH
+
+
+def standalone_graph(gfa_file: str, gfa_version: str) -> MultiDiGraph:
+    graph = MultiDiGraph()
+
+    line_counts: Counter = Counter({t.name: 0 for t in LineType})
+    with open(gfa_file, "r", encoding="utf-8") as reader:
+        for line in reader:
+            gfa_line: Record = Record(line, gfa_version)
+            match (gfa_line.linetype, gfa_line.gfastyle):
+                case (LineType.SEGMENT, _):
+                    graph.add_node(
+                        gfa_line.line.name,
+                        title=f"Seq. length: {gfa_line.line.length}"
+                    )
+                case (LineType.LINE, _):
+                    graph.add_edge(
+                        gfa_line.line.start,
+                        gfa_line.line.end,
+                        label=gfa_line.line.orientation
+                    )
+                case (LineType.WALK, GfaStyle.GFA1_1):
+                    for (a, b) in gfa_line.line.walk:
+                        if not graph.has_edge(a, b):
+                            graph.add_edge(
+                                a,
+                                b,
+                                color=my_cmap[gfa_line.line.origin],
+                                weight=2,
+                            )
+                case (LineType.PATH, GfaStyle.RGFA):
+                    raise ValueError
+                case (LineType.PATH, _):
+                    add_path(graph, sum(
+                        ([a, b] for ((a, _), (b, _)) in gfa_line.line.walk)))
+
+            line_counts[gfa_line.linetype] += 1
+    return graph
 
 
 def compute_graph(gfa_file: str, gfa_version: str, plines: bool = False, save_legend: bool = False) -> MultiDiGraph:
@@ -162,13 +200,14 @@ def compute_graph(gfa_file: str, gfa_version: str, plines: bool = False, save_le
                                 node_a, node_b, color=colors_paths[color], weight=0.5, arrows='?', label=line.split()[1])
                         colors_paths.pop(color)
                 case (LineType.PATH, GfaStyle.GFA1):
-                    for (a, b) in gfa_line.line.path:
+                    for ((a, o_a), (b, o_b)) in gfa_line.line.path:
                         if not graph.has_edge(a, b):
                             graph.add_edge(
                                 a,
                                 b,
                                 color=my_cmap[gfa_line.line.name],
                                 weight=2,
+                                label=f"{o_a}/{o_b}"
                             )
 
             line_counts[gfa_line.linetype] += 1

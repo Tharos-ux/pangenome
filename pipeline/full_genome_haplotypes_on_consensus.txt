@@ -1,0 +1,6 @@
+# Consensus sample
+SeqBt1  ./data/genomes_originaux/seqoccin.Bt.v1.0.fasta
+
+# Haplotypes samples
+BtChar.1    ./data/genomes_originaux/seqoccin.Bt.Char.HiFi_HiC_1.fa
+BtChar.2    ./data/genomes_originaux/seqoccin.Bt.Char.HiFi_HiC_1.fa
