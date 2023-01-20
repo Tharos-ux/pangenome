@@ -17,6 +17,8 @@ conda install -c bioconda minigraph
 conda install -c bioconda vg
 conda install -c bioconda pggb
 conda install -c bioconda odgi
+conda install -c bioconda samtools
+conda install -c conda-forge valgrind
 
 # installing required python packages
 python -m pip install -r requirements.txt

@@ -79,6 +79,11 @@ class Record():
             if gfa_style == GfaStyle.RGFA:
                 raise ValueError(
                     f"Incompatible version format, P-lines vere added in GFA1 and were absent from {gfa_style}.")
+            self.name = datas[1]
+            pathpath: list = datas[2].replace(
+                '-', '').replace('+', '').split(',')
+            self.path = [(pathpath[i], pathpath[i+1])
+                         for i in range(len(pathpath)-1)]
 
     class Header():
         """

@@ -10,10 +10,51 @@ from matplotlib import cm
 from matplotlib.colors import Normalize
 from matplotlib.pyplot import subplots, savefig, plot, legend, figure
 from collections import Counter
-from fileparsers.gfatypes import LineType, Record, GfaStyle
+try:
+    from fileparsers.gfatypes import LineType, Record, GfaStyle
+except ModuleNotFoundError:
+    from gfatypes import LineType, Record, GfaStyle
 
 
-def compute_graph(gfa_file, gfa_version, plines: bool = False, save_legend: bool = False):
+def assert_format(gfa_file: str, gfa_version: GfaStyle) -> LineType:
+    """By checking the first letter of each line, we check which lines can help us to create edges
+
+    Args:
+        gfa_file (str): filepath to GFA
+        gfa_version (GfaStyle): the assumed-by-user GFA subformat
+
+    Returns:
+        LineType: the line type we should get paths from
+    """
+    is_present: dict = {line_type: False for line_type in LineType}
+    with open(gfa_file, "r", encoding="utf-8") as reader:
+        for line in reader:
+            is_present[LineType(line[0])] = True
+
+    if gfa_version == GfaStyle.RGFA:
+        return LineType.SEGMENT
+    if is_present[LineType.WALK]:
+        return LineType.WALK
+    elif is_present[LineType.PATH]:
+        return LineType.PATH
+
+
+def compute_graph(gfa_file: str, gfa_version: str, plines: bool = False, save_legend: bool = False) -> MultiDiGraph:
+    """_summary_
+
+    Args:
+        gfa_file (str): _description_
+        gfa_version (str): _description_
+        plines (bool, optional): _description_. Defaults to False.
+        save_legend (bool, optional): _description_. Defaults to False.
+
+    Returns:
+        MultiDiGraph: _description_
+    """
+    # We need to check what the graph contains first, even if we specify version, because each software has its own particularities
+    _v: GfaStyle = GfaStyle(gfa_version)
+    _t: LineType = assert_format(gfa_file, _v)
+
     # S are nodes and L are edges
     alignment_length: list = [len(l.split()[2]) for l in open(
         gfa_file, "r", encoding="utf-8") if l.split()[0] == "S"]
@@ -30,16 +71,21 @@ def compute_graph(gfa_file, gfa_version, plines: bool = False, save_legend: bool
 
     # Get all alignment sources
 
-    if GfaStyle(gfa_version) == GfaStyle.RGFA:
-        alignment_sources: set = set([int(l.split()[6][5:]) for l in open(
+    if _v == GfaStyle.RGFA:
+        alignment_sources: set = set([l.split()[6][5:] for l in open(
             gfa_file, "r", encoding="utf-8") if l.split()[0] == "L"])
-    elif GfaStyle(gfa_version) == GfaStyle.GFA1_1:
-        alignment_sources: set = set([int(l.split()[2]) for l in open(
+    elif _v == GfaStyle.GFA1_1:
+        alignment_sources: set = set([l.split()[2] for l in open(
             gfa_file, "r", encoding="utf-8") if l.split()[0] == "W"])
+    elif _v == GfaStyle.GFA1:
+        alignment_sources: set = set([l.split()[1] for l in open(
+            gfa_file, "r", encoding="utf-8") if l.split()[0] == "P"])
     else:
-        alignment_sources: set = set()
-    max_source: int = max(alignment_sources)
-    normalized_sources: list = [s/(max_source+1) for s in alignment_sources]
+        raise NotImplementedError()
+
+    max_source: int = len(alignment_sources)
+    normalized_sources: list = [i/(max_source+1)
+                                for i in range(len(alignment_sources)+1)]
     colors_sources: list = colorlist.gen_color_normalized(
         cmap="rainbow", data_arr=normalized_sources)
     my_cmap: dict = {source: colors_sources[i]
@@ -76,7 +122,7 @@ def compute_graph(gfa_file, gfa_version, plines: bool = False, save_legend: bool
                         gfa_line.line.name,
                         size=4 +
                         (16*alignment_length[line_counts[LineType.SEGMENT]]),
-                        title=f"Seq. length: {gfa_line.line.length}"
+                        title=f"Length: {gfa_line.line.length}"
                     )
                 case (LineType.LINE, GfaStyle.RGFA):
                     if gfa_line.line.origin == 0:  # reference sequence
@@ -115,6 +161,16 @@ def compute_graph(gfa_file, gfa_version, plines: bool = False, save_legend: bool
                             graph.add_edge(
                                 node_a, node_b, color=colors_paths[color], weight=0.5, arrows='?', label=line.split()[1])
                         colors_paths.pop(color)
+                case (LineType.PATH, GfaStyle.GFA1):
+                    for (a, b) in gfa_line.line.path:
+                        if not graph.has_edge(a, b):
+                            graph.add_edge(
+                                a,
+                                b,
+                                color=my_cmap[gfa_line.line.name],
+                                weight=2,
+                            )
+
             line_counts[gfa_line.linetype] += 1
     return graph
 

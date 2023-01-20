@@ -37,7 +37,7 @@ if __name__ == "__main__":
     g.load(og_file)
     print(
         f"Sucessfully loaded file containing {g.get_node_count()} nodes and {g.get_path_count()} paths.")
-
+    """
     path = g.get_path_handle('1600')
     step = g.path_begin(path)
     while (g.has_next_step(step)):
@@ -49,3 +49,4 @@ if __name__ == "__main__":
         step = g.get_next_step(step)
     current_node_handle = g.get_handle_of_step(step)
     print(g.get_sequence(current_node_handle))
+    """
