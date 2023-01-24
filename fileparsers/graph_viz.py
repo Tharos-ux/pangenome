@@ -39,44 +39,6 @@ def assert_format(gfa_file: str, gfa_version: GfaStyle) -> LineType:
         return LineType.PATH
 
 
-def standalone_graph(gfa_file: str, gfa_version: str) -> MultiDiGraph:
-    graph = MultiDiGraph()
-
-    line_counts: Counter = Counter({t.name: 0 for t in LineType})
-    with open(gfa_file, "r", encoding="utf-8") as reader:
-        for line in reader:
-            gfa_line: Record = Record(line, gfa_version)
-            match (gfa_line.linetype, gfa_line.gfastyle):
-                case (LineType.SEGMENT, _):
-                    graph.add_node(
-                        gfa_line.line.name,
-                        title=f"Seq. length: {gfa_line.line.length}"
-                    )
-                case (LineType.LINE, _):
-                    graph.add_edge(
-                        gfa_line.line.start,
-                        gfa_line.line.end,
-                        label=gfa_line.line.orientation
-                    )
-                case (LineType.WALK, GfaStyle.GFA1_1):
-                    for (a, b) in gfa_line.line.walk:
-                        if not graph.has_edge(a, b):
-                            graph.add_edge(
-                                a,
-                                b,
-                                color=my_cmap[gfa_line.line.origin],
-                                weight=2,
-                            )
-                case (LineType.PATH, GfaStyle.RGFA):
-                    raise ValueError
-                case (LineType.PATH, _):
-                    add_path(graph, sum(
-                        ([a, b] for ((a, _), (b, _)) in gfa_line.line.walk)))
-
-            line_counts[gfa_line.linetype] += 1
-    return graph
-
-
 def compute_graph(gfa_file: str, gfa_version: str, plines: bool = False, save_legend: bool = False) -> MultiDiGraph:
     """_summary_
 
@@ -241,6 +203,34 @@ def render_graph(gfa_file: str, debug: bool = False, plines: bool = False, gfa_v
         # <img src='{gfa_file.split('.')[0].split('/')[-1]}_cbar.png' align='center' rotate='90'>
     outfile[10] = f"<h1>Graph for <b>{gfa_file.split('.')[0].split('/')[-1]}</b><img src='{gfa_file.split('.')[0].split('/')[-1]}_legend.png' align='center'></h1>"
     with open(f"{gfa_file.split('.')[0]}_graph.html", "w", encoding="utf-8") as html_writer:
+        html_writer.writelines(outfile)
+
+
+def html_graph(graph: MultiDiGraph, job_name: str) -> None:
+    """Creates a interactive .html file representing the given graph
+
+    Args:
+        gfa_file (str): path to a rGFA file
+        debug (bool, optional): plots less nodes in graph. Defaults to False.
+        plines (bool, optional) : plots the P-lines as paths on the graph. Defaults to False.
+    """
+
+    graph_visualizer = Network(
+        height='1000px', width='100%', directed=True)
+    graph_visualizer.toggle_physics(True)
+    graph_visualizer.from_nx(graph)
+    graph_visualizer.set_edge_smooth('dynamic')
+    try:
+        graph_visualizer.show(f"{job_name}_graph.html")
+    except FileNotFoundError:
+        # Path indicated for file may not be correct regarding the lib but writes .html anyways, so ignore ^^
+        pass
+
+    with open(f"{job_name}_graph.html", "r", encoding="utf-8") as html_reader:
+        outfile = html_reader.readlines()
+        # <img src='{gfa_file.split('.')[0].split('/')[-1]}_cbar.png' align='center' rotate='90'>
+    outfile[10] = f"<h1>Graph for <b>{job_name}</b><img src='{job_name}_legend.png' align='center'></h1>"
+    with open(f"{job_name}_graph.html", "w", encoding="utf-8") as html_writer:
         html_writer.writelines(outfile)
 
 

@@ -6,7 +6,10 @@ from .gfa_convert import subsampling_rgfa
 from .gfa_convert import reconstruct_fasta
 
 from .graph_viz import compute_graph
+from .graph_viz import html_graph
 
 from .graph_compare import plot_distribution
 from .graph_compare import lonely_nodes
 from .graph_compare import neighboured_nodes
+
+from .grapher import init_graph

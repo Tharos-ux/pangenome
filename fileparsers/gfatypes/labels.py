@@ -3,6 +3,12 @@ from enum import Enum
 from re import sub
 
 
+class Orientation(Enum):
+    "Describes the way a node is read"
+    FORWARD = '+'
+    REVERSE = '-'
+
+
 class GfaStyle(Enum):
     "Describes the different possible formats"
     RGFA = 'rGFA'
@@ -81,9 +87,13 @@ class Record():
                 raise ValueError(
                     f"Incompatible version format, P-lines vere added in GFA1 and were absent from {gfa_style}.")
             self.name = datas[1]
-            pathpath: list = datas[2].split(',')
-            self.path = [((pathpath[i][:-1], pathpath[i][-1]), (pathpath[i+1][:-1], pathpath[i+1][-1]))
-                         for i in range(len(pathpath)-1)]
+            self.path = [
+                (
+                    node[:-1],
+                    Orientation(node[-1])
+                )
+                for node in datas[2].split(',')
+            ]
 
     class Header():
         """
@@ -94,16 +104,18 @@ class Record():
             if gfa_style == GfaStyle.RGFA:
                 raise ValueError(
                     f"Incompatible version format, H-lines vere added in GFA1 and were absent from {gfa_style}.")
+            self.version = datas[1][5:]
 
     class Jump():
         """
-        J-lines shows jumps within paths/walks ?
+        J-lines shows jumps within paths/walks
         """
 
         def __init__(self, datas: list, gfa_style: GfaStyle) -> None:
             if gfa_style in [GfaStyle.RGFA, GfaStyle.GFA1, GfaStyle.GFA1_1]:
                 raise ValueError(
                     f"Incompatible version format, J-lines vere added in GFA1.2 and were absent from {gfa_style}.")
+            raise NotImplementedError
 
     class Walk():
         """
@@ -119,9 +131,13 @@ class Record():
             self.name = datas[3]
             self.target = datas[4]
             self.length = datas[5]
-            walkpath: list = datas[6].replace('>', '<').split('<')[1:]
-            self.walk = [(walkpath[i], walkpath[i+1])
-                         for i in range(len(walkpath)-1)]
+            self.path = [
+                (
+                    node[1:],
+                    Orientation(node[0])
+                )
+                for node in datas[6].replace('>', ',+').replace('<', ',-')[1:].split(',')
+            ]
 
     def __init__(self, line: str, gfa_type: str) -> None:
         datas: list = line.split()
@@ -143,3 +159,11 @@ class Record():
             self.line = self.Jump(datas, self.gfastyle)
         else:
             raise ValueError('Unknown line for GFA standard')
+
+    def w_to_p_line(self) -> None:
+        if not isinstance(self.line, self.Walk):
+            raise ValueError(
+                f'Bad call of method on {type(self.line)} input type')
+        datas = ['P', self.line.name, ','.join(self.line.walk)]
+        self.linetype: LineType = LineType(datas[0])
+        self.line = self.Path(datas, self.gfastyle)

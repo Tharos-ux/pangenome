@@ -1,6 +1,6 @@
 from argparse import ArgumentParser, SUPPRESS
 from networkx import number_of_isolates, number_of_edges, number_of_nodes
-from fileparsers import compute_graph, plot_distribution, lonely_nodes, neighboured_nodes
+from fileparsers import init_graph, html_graph, plot_distribution, lonely_nodes, neighboured_nodes
 
 if __name__ == '__main__':
 
@@ -12,6 +12,11 @@ if __name__ == '__main__':
         "-g", "--gfa_version", help="Tells the GFA input style", required=True, choices=['rGFA', 'GFA1', 'GFA1.1', 'GFA1.2', 'GFA2'])
     args = parser.parse_args()
 
+    for i, file in enumerate(args.file):
+        g = init_graph(file, args.gfa_version, 3)
+        html_graph(g, f'test_{i}')
+
+    """
     graphs = [compute_graph(file, args.gfa_version) for file in args.file]
     for graph in graphs:
         print(f"Graph has {number_of_isolates(graph)} lonely nodes for a total of {number_of_nodes(graph)} nodes, and {number_of_edges(graph)} edges.")
@@ -24,3 +29,4 @@ if __name__ == '__main__':
     names: list = [filepath.split('.')[0].split('/')[-1]
                    for filepath in args.file]
     plot_distribution(counters, lonely, names)
+    """

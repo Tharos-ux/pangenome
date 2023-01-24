@@ -1,8 +1,8 @@
 "Isolates from tags from fasta file"
 from argparse import ArgumentParser, SUPPRESS
 from json import dump
-from Bio import SeqIO
 from os import remove, path
+from Bio import SeqIO
 
 
 def export_mapping(paf_file: str, save: bool = False) -> list:

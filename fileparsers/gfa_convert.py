@@ -1,7 +1,6 @@
 "Converts various GFA files"
 from argparse import ArgumentParser, SUPPRESS
 from re import sub
-from fileparsers.gfatypes import LineType
 
 
 def rgfa_to_gfa(input_file: str, output_file: str, p_lines: bool = False, keep_tags: bool = False) -> None:
@@ -13,6 +12,7 @@ def rgfa_to_gfa(input_file: str, output_file: str, p_lines: bool = False, keep_t
         output_file (str): a path where file should be written
     """
     # Cleaning file
+    edgelist: list = []
     number_of_nodes: int = 1
     with open(output_file, "w", encoding="utf-8") as gfa_writer:
         pass
@@ -24,7 +24,7 @@ def rgfa_to_gfa(input_file: str, output_file: str, p_lines: bool = False, keep_t
             for line in gfa_reader:
                 datas: list = line.split()
                 # Segment
-                if datas[0] == LineType.SEGMENT:
+                if datas[0] == 'S':
                     number_of_nodes += 1
                     if keep_tags:
                         gfa_writer.write(
@@ -33,7 +33,7 @@ def rgfa_to_gfa(input_file: str, output_file: str, p_lines: bool = False, keep_t
                         gfa_writer.write(
                             '\n'+'\t'.join([datas[0], sub('\D', '', datas[1]), datas[2]]))
                 # Line
-                elif datas[0] == LineType.LINE:
+                elif datas[0] == 'L':
                     if keep_tags:
                         gfa_writer.write(
                             '\n'+'\t'.join([datas[0], sub('\D', '', datas[1]), datas[2], sub('\D', '', datas[3])]+datas[4:]))
@@ -44,9 +44,13 @@ def rgfa_to_gfa(input_file: str, output_file: str, p_lines: bool = False, keep_t
                     # datas[6][5:] == origin_sequence
                     link_informations.append(
                         (sub('\D', '', datas[1])+datas[2], sub('\D', '', datas[3])+datas[4], datas[5], datas[6][5:]))
+                    edgelist.append((sub('\D', '', datas[1]), [], sub(
+                        '\D', '', datas[3]), int(datas[6][5:])))
                 # We don't really know linetype
                 else:
                     gfa_writer.write('\n'+'\t'.join(datas))
+
+        print(len(create_p_lines(edgelist)))
         if p_lines:
             # We need to add P-lines at this point
             visited_paths: list = []
@@ -94,10 +98,75 @@ def rgfa_to_gfa(input_file: str, output_file: str, p_lines: bool = False, keep_t
                     if not chained:
                         paths_to_keep.append((path, cigars, origin))
 
-                    # Writing P-lines
-            for path_number, (line, cigar, _) in enumerate(paths_to_keep):
+            # assembling subpaths
+            diff: int = 0
+            reference: str = paths_to_keep[0][0]
+            complete_paths: list = [
+                (paths_to_keep[0][0], '*', paths_to_keep[0][2])]
+            paths_to_keep: list = paths_to_keep[1:]
+            while diff != len(paths_to_keep) and len(paths_to_keep) > 0:
+                diff = len(paths_to_keep)
+                try:
+                    paths_to_keep: list = min_distance(
+                        paths_to_keep[0][0],
+                        paths_to_keep[0][2],
+                        reference,
+                        paths_to_keep[1:]
+                    )
+                except ValueError:
+                    complete_paths.append(
+                        (paths_to_keep[0][0], '*', paths_to_keep[0][2]))
+                    paths_to_keep = paths_to_keep[1:]
+
+            # Writing P-lines
+            for path_number, (line, cigar, origin) in enumerate(complete_paths):
                 gfa_writer.write(
-                    f"\nP\t{path_number+number_of_nodes}\t{line}\t{cigar}")
+                    f"\nP\t{path_number+number_of_nodes}\t{line}\t{cigar}\tSR:i:{origin}")
+
+
+def create_p_lines(edges: list[tuple]) -> list:
+    """Assuming edges is a four-part tuple list [(edge-a,middle|[],edge-b,sequence-of-edge)] computes the reconstruction of genomes.
+
+    Args:
+        edges (list[tuple]): edge description
+    """
+    # Edges in reference are shared.
+    bank_of_edges: list[tuple] = [(start, stop, seq)
+                                  for (start, stop, seq) in edges if seq == 0]
+
+    # We iterate until convergence, which happens when no sequence could be merged
+    while True:
+        match iterate_edges(edges, bank_of_edges):
+            case None:
+                return edges
+            case (new_edge, pos_to_edit, pos_to_suppress):
+                edges[pos_to_edit] = new_edge
+                edges.pop(pos_to_suppress)
+
+
+def iterate_edges(edges: list[tuple], bank_of_edges: list[tuple]) -> tuple | None:
+    """_summary_
+
+    Args:
+        edges (list[tuple]): _description_
+        bank_of_edges (list[tuple]): _description_
+
+    Returns:
+        tuple: _description_
+    """
+    for edge_a in edges:
+        for edge_b in edges + bank_of_edges:
+            if edge_a != edge_b:
+                match (edge_a, edge_b):
+                    case ((start, internal_left, bridge_a, seq_a), (bridge_b, internal_right, end, seq_b)) | ((bridge_a, internal_right, end, seq_a), (start, internal_left, bridge_b, seq_b)) if seq_a == seq_b and bridge_a == bridge_b:
+                        # Same seq and chained, or same seq and chained and reversed
+                        return (start, internal_left + [bridge_a] + internal_right, end, seq_a)
+                    case ((start, internal_left, bridge_a, 0), (bridge_b, internal_right, end, seq)) | ((start, internal_left, bridge_a, seq), (bridge_b, internal_right, end, 0)) | ((bridge_a, internal_right, end, 0), (start, internal_left, bridge_b, seq)) | ((bridge_a, internal_right, end, seq), (start, internal_left, bridge_b, 0)) if bridge_a == bridge_b:
+                        # Different seq but chained to ref, or different seq but chained to ref and reversed
+                        return (start, internal_left + [bridge_a] + internal_right, end, seq)
+                    case _:
+                        # No edge can be merge
+                        return
 
 
 def deep_chains(path: str, cigar: str, origin: str, list_of_paths: list, max_depth: int) -> tuple:
@@ -135,6 +204,49 @@ def deep_chains(path: str, cigar: str, origin: str, list_of_paths: list, max_dep
                     )
                     return list_of_paths, True
     return list_of_paths, False
+
+
+def min_distance(path: str, origin: str, reference_path: str, list_of_unclassified: list):
+    """_summary_
+
+    Args:
+        path (list): _description_
+        reference_path (list): _description_
+        list_of_unclassified (list): _description_
+    """
+    path: list = path.split(',')
+    seek_ref = reference_path.replace('-', '+').split(',')
+    reference_path: list = reference_path.split(',')
+
+    idx_start_path: int = seek_ref.index(path[0])
+    idx_end_path: int = seek_ref.index(path[-1])
+    distances: list = [
+        abs(
+            idx_start_path-seek_ref.index(query.split(',')[0][-1])
+        ) for query, _, o in list_of_unclassified if o == origin
+    ]
+
+    target: int = distances.index(min(distances))
+    query_seq: list = list_of_unclassified[target][0].split(',')
+
+    idx_start_query: int = seek_ref.index(query_seq[0])
+    idx_end_query: int = seek_ref.index(query_seq[-1])
+
+    if idx_start_path > idx_start_query:
+        # path is located after query
+        list_of_unclassified[target] = (','.join(
+            query_seq +
+            reference_path[idx_end_query: idx_start_path] +
+            path), '*', origin
+        )
+    else:
+        list_of_unclassified[target] = (','.join(
+            path +
+            reference_path[idx_end_path:idx_start_query] +
+            query_seq), '*', origin
+        )
+
+    return list_of_unclassified
 
 
 def find_bool_subpath(path: str, origin: str, list_of_paths: list) -> bool:

@@ -27,3 +27,8 @@ cd /scratch/sdubois/Stage_M2/pangenome/
 srun --pty bash
 . /local/env/envconda.sh
 conda activate .env/
+
+
+/scratch/sdubois/Stage_M2/pangenome/data/full_genome_hoc_pggb
+
+data/genomes_originaux/pggb_HoC.fa
