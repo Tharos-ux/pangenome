@@ -25,7 +25,7 @@ cactus-graphmap ./jobstore_$4 $1 $2.gfa $2.paf  --reference $3 --outputFasta $2.
 cactus-align ./jobstore_$4 $1 $2.paf $2.hal --pangenome --outGFA --outVG --reference $3 
 
 # final step
-cactus-graphmap-join ./jobstore_$4 --gfa --vg --outDir ./$2 --outName $4 --reference $3 --vcf --giraffe
+cactus-graphmap-join ./jobstore_$4 --vg $2.vg --outDir ./$2 --outName $4 --reference $3 --vcf --giraffe --gfa
 
 # $1 must be a txt file from the format 
 # Diploid sample:
