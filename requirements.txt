@@ -1,2 +1,5 @@
 Bio
 multiqc
+pyvis
+networkx
+mycolorpy
