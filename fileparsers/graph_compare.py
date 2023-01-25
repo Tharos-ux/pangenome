@@ -5,6 +5,42 @@ from argparse import ArgumentParser, SUPPRESS
 from statsmodels.stats.weightstats import DescrStatsW
 from networkx import MultiDiGraph, is_isolate
 import matplotlib.pyplot as plt
+from grapher import init_graph
+
+
+def size_ratio(counts: list, threshold: int) -> float:
+    """Computes the ratio of nodes below or equal a threshold / nodes above a threshold
+    1 means all nodes are above threshold
+
+    Args:
+        graph (MultiDiGraph): _description_
+        threshold (int): _description_
+
+    Returns:
+        float: _description_
+    """
+    num, denom = .0, .0
+    for size, count in counts:
+        if size <= threshold:
+            num += count
+        else:
+            denom += count
+    return num/(denom+num)
+
+
+def plot_ratio(counts: list, names: list, x_min: int, x_max: int, x_step: int = 1) -> None:
+    plt.figure(figsize=(20, 4))
+    for i, count in enumerate(counts):
+        ratios: list = [size_ratio(count, x)
+                        for x in range(x_min, x_max, x_step)]
+        plt.plot(ratios, label=names[i])
+    plt.xscale('log')
+    plt.legend(loc='upper center', bbox_to_anchor=(
+        0.5, -0.05), ncol=len(counts))
+    plt.ylim(0.5, 1)
+    plt.xlim(1, x_max)
+    plt.savefig('test.png', bbox_inches='tight')
+    plt.show()
 
 
 def lonely_nodes(graph: MultiDiGraph) -> list:
@@ -102,10 +138,22 @@ if __name__ == "__main__":
     parser.add_argument("file", type=str, help="gfa-like file", nargs='+')
     parser.add_argument('-h', '--help', action='help', default=SUPPRESS,
                         help='Plot distribution of node length across graph')
+    parser.add_argument(
+        "-g",
+        "--gfa_version",
+        help="Tells the GFA input style",
+        required=True,
+        choices=['rGFA', 'GFA1', 'GFA1.1', 'GFA1.2', 'GFA2']
+    )
     args = parser.parse_args()
 
     counters: list = [parse_gfa(filepath) for filepath in args.file] if isinstance(
         args.file, list) else [parse_gfa(args.file)]
     names: list = [filepath.split('.')[0].split('/')[-1] for filepath in args.file] if isinstance(
         args.file, list) else [args.file.split('.')[0].split('/')[-1]]
-    plot_distribution(counters, names)
+    # plot_distribution(counters, names)
+
+    lengths: list = [parse_gfa(name) for name in args.file]
+    # max_len: int = min([length[-1][0] for length in lengths])
+
+    plot_ratio(lengths, names, 0, 10000, 1)
