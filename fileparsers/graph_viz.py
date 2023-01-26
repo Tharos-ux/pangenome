@@ -86,10 +86,13 @@ def compute_graph(gfa_file: str, gfa_version: str, plines: bool = False, save_le
     max_source: int = len(alignment_sources)
     normalized_sources: list = [i/(max_source+1)
                                 for i in range(len(alignment_sources)+1)]
+
     colors_sources: list = colorlist.gen_color_normalized(
         cmap="rainbow", data_arr=normalized_sources)
+
     my_cmap: dict = {source: colors_sources[i]
                      for i, source in enumerate(alignment_sources)}
+
     figure().clear()
     # Creating the legends for alignments
     handles = [plot([], [], marker="s", color=cs, ls="none")[0]

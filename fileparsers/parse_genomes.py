@@ -69,9 +69,9 @@ if __name__ == "__main__":
         "paffile", type=str, help="paf-like file")
     parser.add_argument(
         "chromosom", type=str, help="name of assembly on reference sequence")
-    args = parser.parse_args()
     parser.add_argument('-h', '--help', action='help', default=SUPPRESS,
                         help='Extracts from a fasta-like file all sequences in a query assembly given a mapping to a reference and an identifier on reference.')
+    args = parser.parse_args()
 
     isolate_scaffolds(fasta_file=args.file, out_file=args.out,
                       paf_file=args.paffile, chromosom=args.chromosom)
