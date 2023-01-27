@@ -1,6 +1,6 @@
 # Consensus sample
-SeqBt1  ./SeqBt1s3.fasta
+SeqBt1  ./data/hybrid/SeqBt_1_hybride.fasta
 
 # Haplotypes samples
-BtChar.1    ./BtChar.1s3.fasta
-BtChar.2    ./BtChar.2s3.fasta
+BtChar.1    ./data/hybrid/BtChar_1_hybride.fasta
+BtChar.2    ./data/hybrid/BtChar_2_hybride.fasta

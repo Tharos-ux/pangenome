@@ -1,5 +1,5 @@
 #!/bin/bash
-#SBATCH --job-name=minigraph_create_graph_phased
+#SBATCH --job-name=KEKtus
 #SBATCH --cpus-per-task=8
 #SBATCH --mem=80G
 #SBATCH --output=LOG_cactus.log
@@ -25,8 +25,9 @@ cactus-graphmap ./jobstore_$4 $1 $2.gfa $2.paf  --reference $3 --outputFasta $2.
 cactus-align ./jobstore_$4 $1 $2.paf $2.hal --pangenome --outGFA --outVG --reference $3 
 
 # final step
-cactus-graphmap-join ./jobstore_$4 --vg $2.vg --outDir ./$2 --outName $4 --reference $3 --vcf --giraffe --gfa
+cactus-graphmap-join ./jobstore_$4 --vg $2.vg --outDir ./$2 --outName $4 --reference $3 --gfa
 
+# --vcf --giraffe
 # $1 must be a txt file from the format 
 # Diploid sample:
 # HG002.1  ./HG002.paternal.fa
