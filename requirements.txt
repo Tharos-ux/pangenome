@@ -3,3 +3,5 @@ multiqc
 pyvis
 networkx
 mycolorpy
+cmake
+bdsg
