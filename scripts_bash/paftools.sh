@@ -17,6 +17,6 @@ fi
 
 conda activate $ENV
 
-minimap2 -cx asm5 --cs $1 $2 $3 sort -k6,6 -k8,8n paftools.js call -f $1 - > out.vcf
+minimap2 -cx asm5 --cs $1 $2 $3 | sort -k6,6 -k8,8n | paftools.js call -f $1 - > out.vcf
 
 conda deactivate

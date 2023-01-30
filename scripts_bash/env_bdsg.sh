@@ -11,6 +11,10 @@ conda create -p $WD"/.env_bdsg" python=3.7
 # activate env to install packages
 conda activate $WD"/.env_bdsg"
 
+# requirements for bdsg
+conda install -c conda-forge doxygen
+
+
 python -m pip install --upgrade pip
 python -m pip install --upgrade setuptools
 python -m pip install --upgrade wheel
