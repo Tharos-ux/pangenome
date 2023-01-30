@@ -6,19 +6,10 @@ WD=$(pwd)
 export CONDA_ALWAYS_YES="true"
 
 # init env
-conda create -p $WD"/.env" python=3.10
+conda create -p $WD"/.env_bdsg" python=3.7
 
 # activate env to install packages
-conda activate $WD"/.env"
-
-# installing vgtools, minimap2, minigraph, odgi
-conda install -c bioconda minimap2
-conda install -c bioconda minigraph
-conda install -c bioconda vg
-conda install -c bioconda pggb
-conda install -c bioconda odgi
-conda install -c bioconda samtools
-conda install -c conda-forge valgrind
+conda activate $WD"/.env_bdsg"
 
 python -m pip install --upgrade pip
 python -m pip install --upgrade setuptools
