@@ -1,0 +1,6 @@
+# Consensus sample
+SeqBt1  ./data/chr_28/Consensus_28.fa
+
+# Haplotypes samples
+BtChar.1    ./data/chr_28/Char1_28.fa
+BtChar.2    ./data/chr_28/Char2_28.fa
