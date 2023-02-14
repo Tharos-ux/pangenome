@@ -3,7 +3,7 @@ from itertools import combinations
 from argparse import ArgumentParser, SUPPRESS
 from re import sub
 from networkx import MultiDiGraph, compose_all
-from gfatypes import LineType, Record
+from gfa_types import LineType, Record
 from pyvis.network import Network
 
 

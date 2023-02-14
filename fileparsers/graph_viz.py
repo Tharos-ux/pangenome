@@ -13,7 +13,7 @@ from collections import Counter
 try:
     from fileparsers.gfatypes import LineType, Record, GfaStyle
 except ModuleNotFoundError:
-    from gfatypes import LineType, Record, GfaStyle
+    from gfa_types import LineType, Record, GfaStyle
 
 
 def assert_format(gfa_file: str, gfa_version: GfaStyle) -> LineType:

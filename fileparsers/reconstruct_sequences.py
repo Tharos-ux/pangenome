@@ -4,7 +4,7 @@ from typing import Generator
 try:
     from fileparsers.gfatypes import LineType, Record, GfaStyle
 except ModuleNotFoundError:
-    from gfatypes import LineType, Record, GfaStyle
+    from gfa_types import LineType, Record, GfaStyle
 
 
 def grab_paths(gfa_file: str, gfa_version) -> list[Record]:
