@@ -1,6 +1,6 @@
 # Consensus sample
-SeqBt1  ./data/chr_28/Consensus_28.fa
+heifer_diploid  /scratch/sdubois/Stage_M2/pangenome/data/chr_28/heifer_diploid.fa
 
 # Haplotypes samples
-BtChar.1    ./data/chr_28/Char1_28.fa
-BtChar.2    ./data/chr_28/Char2_28.fa
+heifer_hap1    /scratch/sdubois/Stage_M2/pangenome/data/chr_28/heifer_hap1.fa
+heifer_hap2    /scratch/sdubois/Stage_M2/pangenome/data/chr_28/heifer_hap2.fa
